@@ -65,30 +65,41 @@ html, body {
 }
 
 .brand-title {
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: 1.15rem;
+  font-weight: 800;
   letter-spacing: -0.02em;
-}
-
-.sync-badge {
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--card-border);
-  padding: 2px 7px;
-  border-radius: 999px;
-}
-
-.sync-badge.synced {
-  color: #34d399;
-  border-color: rgba(16, 185, 129, 0.3);
 }
 
 .header-actions {
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.user-pill-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--card-border);
+  color: #38bdf8;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
   gap: 6px;
+  max-width: 150px;
+  transition: transform 0.12s ease, background 0.15s ease;
+}
+
+.user-pill-btn:active {
+  transform: scale(0.95);
+}
+
+#headerUserName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .icon-btn {
@@ -108,11 +119,6 @@ html, body {
 
 .icon-btn:active {
   transform: scale(0.95);
-}
-
-.icon-btn.active-notif {
-  color: var(--accent);
-  border-color: rgba(16, 185, 129, 0.35);
 }
 
 /* Sleep Banner */
@@ -137,13 +143,13 @@ html, body {
   background: radial-gradient(circle at 50% 0%, var(--accent-glow), var(--card) 70%);
   border: 1px solid var(--card-border);
   border-radius: 20px;
-  padding: 18px 16px;
+  padding: 22px 16px;
   text-align: center;
   position: relative;
 }
 
 .hero-label {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -151,11 +157,11 @@ html, body {
 }
 
 .hero-timer {
-  font-size: 2.75rem;
+  font-size: 3rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.03em;
-  margin: 6px 0 4px;
+  margin: 6px 0 6px;
   color: #ffffff;
 }
 
@@ -177,31 +183,6 @@ html, body {
   border-radius: 999px;
   font-size: 0.72rem;
   font-weight: 600;
-}
-
-/* Next hourly check-in progress bar */
-.hourly-bar-wrap {
-  margin-top: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  height: 6px;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.hourly-bar-fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #10b981, #34d399);
-  border-radius: 999px;
-  transition: width 0.4s ease;
-}
-
-.hourly-caption {
-  margin-top: 6px;
-  font-size: 0.74rem;
-  color: var(--text-muted);
-  display: flex;
-  justify-content: space-between;
 }
 
 /* Stats Grid */
@@ -258,22 +239,9 @@ html, body {
   background: var(--card);
   border: 1px solid var(--card-border);
   border-radius: 18px;
-  padding: 14px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.actions-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.actions-title {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-muted);
 }
 
 .smoke-buttons-row {
@@ -304,19 +272,11 @@ html, body {
 .btn-large {
   padding: 18px 8px;
   border-radius: 16px;
-  gap: 5px;
 }
 
 .btn-main-text {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 800;
-}
-
-.btn-sub {
-  font-size: 0.68rem;
-  font-weight: 500;
-  opacity: 0.85;
-  font-variant-numeric: tabular-nums;
 }
 
 .btn-smoke-1 {
@@ -341,15 +301,10 @@ html, body {
   width: 100%;
   background: linear-gradient(135deg, #10b981, #059669);
   color: #06281e;
-  padding: 13px;
-  font-size: 0.98rem;
+  padding: 14px;
+  font-size: 1rem;
   font-weight: 800;
   box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
-}
-
-.btn-no-smoke .btn-sub {
-  color: #042f2e;
-  opacity: 0.9;
 }
 
 /* History / Log list */
@@ -385,15 +340,11 @@ html, body {
   cursor: pointer;
 }
 
-.text-btn.danger {
-  color: #f87171;
-}
-
 .log-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 150px;
+  max-height: 160px;
   overflow-y: auto;
 }
 
@@ -435,7 +386,7 @@ html, body {
   padding: 12px 0;
 }
 
-/* Hourly Popup Modal */
+/* Modals */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -508,6 +459,103 @@ html, body {
 .modal-stat-val {
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+}
+
+/* User Switch Modal Specifics */
+.user-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.user-modal-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.user-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.user-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.user-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--card-border);
+  color: #ffffff;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.user-input:focus {
+  border-color: #38bdf8;
+}
+
+.btn-save-user {
+  background: #38bdf8;
+  color: #0b1120;
+  border: none;
+  padding: 0 18px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.recent-users-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.recent-users-title {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.recent-users-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.recent-user-tag {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--card-border);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.recent-user-tag.active {
+  border-color: #38bdf8;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
 }
 
 /* Toast notification */

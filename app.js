@@ -1,13 +1,54 @@
 // Smoff — Mini Mobile App theo dõi không hút thuốc
 // Trừ giờ ngủ: 23:00 (11:00 PM) -> 07:30 (7:30 AM)
-// Đồng bộ Cloud đa thiết bị qua Vercel Blob (/api/state)
+// Đồng bộ Cloud đa thiết bị theo người dùng qua Vercel Blob (/api/state?user=...)
 
-const STORAGE_KEY = 'smoff_state_v1';
+const ACTIVE_USER_KEY = 'smoff_active_user';
+const RECENT_USERS_KEY = 'smoff_recent_users';
 const ONE_HOUR_MS = 60 * 60 * 1000;
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
+function normalizeUser(raw) {
+  if (!raw || typeof raw !== 'string') return 'johnnyhoang';
+  const clean = raw.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+  return clean || 'johnnyhoang';
+}
+
+function getActiveUser() {
+  return normalizeUser(localStorage.getItem(ACTIVE_USER_KEY) || 'johnnyhoang');
+}
+
+function setActiveUser(user) {
+  const clean = normalizeUser(user);
+  localStorage.setItem(ACTIVE_USER_KEY, clean);
+
+  // Lưu vào danh sách gần đây
+  const recents = getRecentUsers();
+  if (!recents.includes(clean)) {
+    recents.unshift(clean);
+    localStorage.setItem(RECENT_USERS_KEY, JSON.stringify(recents.slice(0, 8)));
+  }
+  return clean;
+}
+
+function getRecentUsers() {
+  try {
+    const raw = localStorage.getItem(RECENT_USERS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed.map(normalizeUser);
+    }
+  } catch (e) {}
+  return ['johnnyhoang'];
+}
+
+let currentUser = getActiveUser();
+
+function getStorageKey(user = currentUser) {
+  return `smoff_state_${user}`;
+}
+
 /**
- * Kiểm tra một thời điểm (Date) có nằm trong giờ ngủ (23:00 - 07:30) hay không
+ * Kiểm tra một thời điểm có nằm trong giờ ngủ (23:00 - 07:30) hay không
  */
 function isSleepingTime(date = new Date()) {
   const h = date.getHours();
@@ -19,8 +60,6 @@ function isSleepingTime(date = new Date()) {
 
 /**
  * Tính chính xác thời gian THỨC (đã trừ khung ngủ 23:00 - 07:30 mỗi ngày)
- * giữa 2 mốc timestamp (ms).
- * Khung giờ thức mỗi ngày là [07:30:00.000, 23:00:00.000].
  */
 function getAwakeDurationMs(startMs, endMs) {
   if (endMs <= startMs) return 0;
@@ -65,9 +104,6 @@ function getAwakeDurationMs(startMs, endMs) {
   return totalAwakeMs;
 }
 
-/**
- * Lấy chuỗi YYYY-MM-DD theo giờ địa phương để đếm số điếu trong ngày
- */
 function getLocalDateKey(ms = Date.now()) {
   const d = new Date(ms);
   const y = d.getFullYear();
@@ -76,9 +112,6 @@ function getLocalDateKey(ms = Date.now()) {
   return `${y}-${m}-${day}`;
 }
 
-/**
- * Định dạng mili-giây thành HH:MM:SS cho đồng hồ chính
- */
 function formatHMS(ms) {
   const totalSec = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(totalSec / 3600);
@@ -91,9 +124,6 @@ function formatHMS(ms) {
   ].join(':');
 }
 
-/**
- * Định dạng mili-giây ngắn gọn (vd: "2h 12p", "45p 10s", "1h 06p")
- */
 function formatShortDuration(ms) {
   if (!ms || ms <= 0) return '0p';
   const totalSec = Math.round(ms / 1000);
@@ -115,10 +145,14 @@ function formatTimeHHMM(ms) {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-// Khởi tạo / Đọc trạng thái từ localStorage
-function loadState() {
+function loadState(user = currentUser) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    // Thử đọc state theo key của user
+    let raw = localStorage.getItem(getStorageKey(user));
+    // Nếu là johnnyhoang và chưa có key riêng, đọc fallback từ legacy key
+    if (!raw && user === 'johnnyhoang') {
+      raw = localStorage.getItem('smoff_state_v1');
+    }
     if (raw) {
       const parsed = JSON.parse(raw);
       return {
@@ -144,24 +178,30 @@ function loadState() {
 
 function saveLocalState() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(getStorageKey(currentUser), JSON.stringify(state));
   } catch (e) {
     console.error('Failed to save state:', e);
   }
 }
 
-let state = loadState();
+let state = loadState(currentUser);
 let isSyncing = false;
 
 // DOM Elements
 const statusDot = document.getElementById('statusDot');
-const syncBadge = document.getElementById('syncBadge');
+const headerUserName = document.getElementById('headerUserName');
+const btnUserModal = document.getElementById('btnUserModal');
+const userModal = document.getElementById('userModal');
+const btnCloseUserModal = document.getElementById('btnCloseUserModal');
+const userForm = document.getElementById('userForm');
+const userNameInput = document.getElementById('userNameInput');
+const recentUsersSection = document.getElementById('recentUsersSection');
+const recentUsersList = document.getElementById('recentUsersList');
+
 const sleepBanner = document.getElementById('sleepBanner');
 const currentStreakTimer = document.getElementById('currentStreakTimer');
 const lastSmokeLabel = document.getElementById('lastSmokeLabel');
 const liveRecordBadge = document.getElementById('liveRecordBadge');
-const hourlyBarFill = document.getElementById('hourlyBarFill');
-const nextCheckInText = document.getElementById('nextCheckInText');
 
 const pastRecordValue = document.getElementById('pastRecordValue');
 const monthlyAvgValue = document.getElementById('monthlyAvgValue');
@@ -169,77 +209,63 @@ const monthlyAvgSub = document.getElementById('monthlyAvgSub');
 const todayCountValue = document.getElementById('todayCountValue');
 const todayCountSub = document.getElementById('todayCountSub');
 
-const previewSplit1 = document.getElementById('previewSplit1');
-const previewSplit2 = document.getElementById('previewSplit2');
-const previewSplit3 = document.getElementById('previewSplit3');
-
 const logList = document.getElementById('logList');
 const btnUndo = document.getElementById('btnUndo');
-const btnResetStart = document.getElementById('btnResetStart');
 const btnTestPopup = document.getElementById('btnTestPopup');
-const btnNotif = document.getElementById('btnNotif');
 
 const hourlyModal = document.getElementById('hourlyModal');
 const modalCurrentStreak = document.getElementById('modalCurrentStreak');
 const modalPastRecord = document.getElementById('modalPastRecord');
 const modalMonthlyAvg = document.getElementById('modalMonthlyAvg');
 const modalTodayCount = document.getElementById('modalTodayCount');
-const modalSplit1 = document.getElementById('modalSplit1');
-const modalSplit2 = document.getElementById('modalSplit2');
-const modalSplit3 = document.getElementById('modalSplit3');
 
 const toastEl = document.getElementById('toast');
 let toastTimeout = null;
 
-function setSyncStatus(text, isSynced = false) {
-  if (!syncBadge) return;
-  syncBadge.textContent = text;
-  if (isSynced) {
-    syncBadge.classList.add('synced');
-  } else {
-    syncBadge.classList.remove('synced');
-  }
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.remove('hidden');
+  if (toastTimeout) clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => {
+    toastEl.classList.add('hidden');
+  }, 3000);
 }
 
 /**
- * Đẩy trạng thái hiện tại lên Vercel Blob qua /api/state
+ * Đẩy trạng thái của currentUser lên Vercel Blob
  */
 async function pushCloudState() {
   state.updatedAt = Date.now();
   saveLocalState();
-  setSyncStatus('🔄 Đang lưu...', false);
 
   try {
-    const res = await fetch('/api/state', {
+    await fetch('/api/state', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(state)
+      body: JSON.stringify({
+        ...state,
+        user: currentUser
+      })
     });
-    if (res.ok) {
-      setSyncStatus('☁️ Đã đồng bộ', true);
-    } else {
-      setSyncStatus('⚠️ Lưu cục bộ', false);
-    }
-  } catch (err) {
-    setSyncStatus('⚠️ Offline', false);
-  }
+  } catch (err) {}
 }
 
 /**
- * Tải trạng thái mới nhất từ Vercel Blob qua /api/state
+ * Tải trạng thái mới nhất của currentUser từ Vercel Blob
  */
 async function pullCloudState() {
   if (isSyncing) return;
   isSyncing = true;
   try {
-    const res = await fetch(`/api/state?t=${Date.now()}`, { cache: 'no-store' });
+    const res = await fetch(`/api/state?user=${encodeURIComponent(currentUser)}&t=${Date.now()}`, {
+      cache: 'no-store'
+    });
     if (!res.ok) {
       isSyncing = false;
       return;
     }
     const cloud = await res.json();
     if (cloud && cloud.empty) {
-      // Cloud chưa có dữ liệu -> đẩy trạng thái máy hiện tại lên làm gốc
       await pushCloudState();
       isSyncing = false;
       return;
@@ -263,30 +289,60 @@ async function pullCloudState() {
       } else if (localUpdated > cloudUpdated) {
         await pushCloudState();
       }
-      setSyncStatus('☁️ Đã đồng bộ', true);
     }
   } catch (err) {
-    setSyncStatus('⚠️ Offline', false);
   } finally {
     isSyncing = false;
   }
 }
 
-function showToast(msg) {
-  toastEl.textContent = msg;
-  toastEl.classList.remove('hidden');
-  if (toastTimeout) clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => {
-    toastEl.classList.add('hidden');
-  }, 3200);
+/**
+ * Chuyển sang một người theo dõi khác
+ */
+function switchUser(newUser) {
+  const clean = setActiveUser(newUser);
+  currentUser = clean;
+  headerUserName.textContent = clean;
+  state = loadState(clean);
+  renderLogs();
+  updateUI(Date.now());
+  closeUserModal();
+  showToast(`Đã chuyển sang: ${clean}`);
+  pullCloudState();
 }
 
-/**
- * Tính toán các chỉ số thống kê từ lịch sử:
- * - Kỷ lục trong quá khứ (max của các khoảng eachIntervalMs đã ghi nhận)
- * - Trung bình 1 tháng qua (tổng thời gian thức / tổng số điếu trong 30 ngày)
- * - Số điếu trong ngày hôm nay
- */
+function openUserModal() {
+  userNameInput.value = currentUser;
+  renderRecentUsers();
+  userModal.classList.remove('hidden');
+  userNameInput.focus();
+}
+
+function closeUserModal() {
+  userModal.classList.add('hidden');
+}
+
+function renderRecentUsers() {
+  const recents = getRecentUsers();
+  if (recents.length <= 1) {
+    recentUsersSection.classList.add('hidden');
+    return;
+  }
+  recentUsersSection.classList.remove('hidden');
+  recentUsersList.innerHTML = recents
+    .map((name) => {
+      const isActive = name === currentUser ? 'active' : '';
+      return `<button class="recent-user-tag ${isActive}" type="button" data-user="${name}">👤 ${name}</button>`;
+    })
+    .join('');
+
+  recentUsersList.querySelectorAll('[data-user]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      switchUser(btn.getAttribute('data-user'));
+    });
+  });
+}
+
 function computeMetrics(nowMs = Date.now()) {
   const todayKey = getLocalDateKey(nowMs);
   const cutoff30d = nowMs - THIRTY_DAYS_MS;
@@ -319,9 +375,6 @@ function computeMetrics(nowMs = Date.now()) {
   };
 }
 
-/**
- * Phát âm báo nhẹ + rung khi nổi popup 1 tiếng
- */
 function playHourlyAlertSound() {
   try {
     if (navigator.vibrate) {
@@ -330,7 +383,7 @@ function playHourlyAlertSound() {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
     const ctx = new AudioCtx();
-    const notes = [523.25, 659.25, 783.99]; // C5 - E5 - G5
+    const notes = [523.25, 659.25, 783.99];
     notes.forEach((freq, idx) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -344,19 +397,14 @@ function playHourlyAlertSound() {
       osc.start(ctx.currentTime + idx * 0.14);
       osc.stop(ctx.currentTime + idx * 0.14 + 0.3);
     });
-  } catch (err) {
-    // Ignore audio errors if user hasn't interacted yet
-  }
+  } catch (err) {}
 }
 
-/**
- * Gửi thông báo hệ thống (Web Notification) nếu được cấp quyền
- */
 function sendHourlyNotification(currentAwakeMs, metrics) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
 
-  const title = `⏰ Đã duy trì ${formatShortDuration(currentAwakeMs)} không hút!`;
-  const body = `Kỷ lục: ${formatShortDuration(metrics.pastRecordMs)} • TB 1 tháng: ${formatShortDuration(metrics.monthlyAvgMs)} • Hôm nay: ${metrics.todayCigs} điếu. Chạm để chọn Đã hút 1, 2, 3 hoặc Chưa hút.`;
+  const title = `⏰ [${currentUser}] Đã duy trì ${formatShortDuration(currentAwakeMs)} không hút!`;
+  const body = `Kỷ lục: ${formatShortDuration(metrics.pastRecordMs)} • TB: ${formatShortDuration(metrics.monthlyAvgMs)} • Hôm nay: ${metrics.todayCigs} điếu.`;
 
   if (navigator.serviceWorker && navigator.serviceWorker.controller) {
     navigator.serviceWorker.ready.then((reg) => {
@@ -364,12 +412,12 @@ function sendHourlyNotification(currentAwakeMs, metrics) {
         body,
         icon: 'icon.svg',
         badge: 'icon.svg',
-        tag: 'smoff-hourly-checkin',
+        tag: `smoff-${currentUser}`,
         renotify: true
       });
     });
   } else {
-    const n = new Notification(title, { body, icon: 'icon.svg', tag: 'smoff-hourly-checkin' });
+    const n = new Notification(title, { body, icon: 'icon.svg', tag: `smoff-${currentUser}` });
     n.onclick = () => {
       window.focus();
       openHourlyModal();
@@ -387,10 +435,7 @@ function closeHourlyModal() {
 }
 
 /**
- * Xử lý khi bấm 1 trong 4 nút:
- * - count = 0: "Chưa hút" -> giữ nguyên bộ đếm, chỉ đặt lại mốc nhắc 1 tiếng
- * - count = 1, 2, 3: "Đã hút 1/2/3" -> chia khoảng thời gian thức từ lần bấm trước cho count,
- *   lưu vào lịch sử, cộng số điếu trong ngày, và reset bộ đếm về 0.
+ * Xử lý khi bấm nút hút (1, 2, 3) hoặc chưa hút (0)
  */
 function handleSmokeButton(count) {
   const now = Date.now();
@@ -400,13 +445,12 @@ function handleSmokeButton(count) {
     state.lastAlertedHourCycle = 0;
     closeHourlyModal();
     const currentAwakeMs = getAwakeDurationMs(state.streakStartMs, now);
-    showToast(`✅ Tuyệt vời! Tiếp tục giữ chuỗi ${formatShortDuration(currentAwakeMs)}`);
+    showToast(`Tiếp tục giữ chuỗi: ${formatShortDuration(currentAwakeMs)}`);
     updateUI(now);
     pushCloudState();
     return;
   }
 
-  // Đã hút 1, 2 hoặc 3 điếu
   const totalAwakeMs = getAwakeDurationMs(state.streakStartMs, now);
   const eachIntervalMs = Math.round(totalAwakeMs / count);
 
@@ -432,17 +476,12 @@ function handleSmokeButton(count) {
   pushCloudState();
 
   if (count === 1) {
-    showToast(`Đã ghi 1 điếu (${formatShortDuration(eachIntervalMs)}) • Đã reset bộ đếm`);
+    showToast(`+1 điếu (${formatShortDuration(eachIntervalMs)})`);
   } else {
-    showToast(
-      `Đã ghi ${count} điếu • Chia đều ${formatShortDuration(eachIntervalMs)}/điếu (từ ${formatShortDuration(totalAwakeMs)})`
-    );
+    showToast(`+${count} điếu (${formatShortDuration(eachIntervalMs)}/điếu)`);
   }
 }
 
-/**
- * Hoàn tác lần bấm "Đã hút" gần nhất nếu bấm nhầm
- */
 function handleUndo() {
   if (state.logs.length === 0) return;
   const last = state.logs.shift();
@@ -454,28 +493,9 @@ function handleUndo() {
   renderLogs();
   updateUI(Date.now());
   pushCloudState();
-  showToast('↩ Đã hoàn tác lần bấm gần nhất');
+  showToast('↩ Đã hoàn tác');
 }
 
-/**
- * Đặt lại mốc bắt đầu đếm hiện tại về bây giờ (không thêm điếu thuốc)
- */
-function handleResetStart() {
-  if (!confirm('Đặt lại đồng hồ đếm hiện tại về 00:00:00 (lịch sử cũ vẫn giữ nguyên)?')) {
-    return;
-  }
-  const now = Date.now();
-  state.streakStartMs = now;
-  state.lastCheckInMs = now;
-  state.lastAlertedHourCycle = 0;
-  updateUI(now);
-  pushCloudState();
-  showToast('Đã đặt lại đồng hồ về 00:00:00');
-}
-
-/**
- * Hiển thị danh sách các lần bấm trong ngày hôm nay
- */
 function renderLogs() {
   const todayKey = getLocalDateKey(Date.now());
   const todayLogs = state.logs.filter((l) => l.dateKey === todayKey);
@@ -487,7 +507,7 @@ function renderLogs() {
   }
 
   if (todayLogs.length === 0) {
-    logList.innerHTML = `<div class="empty-log">Chưa có lần hút nào được ghi nhận hôm nay</div>`;
+    logList.innerHTML = `<div class="empty-log">Chưa có lần hút nào hôm nay</div>`;
     return;
   }
 
@@ -495,12 +515,12 @@ function renderLogs() {
     .map((item) => {
       const splitExplain =
         item.count > 1
-          ? `${formatShortDuration(item.eachIntervalMs)}/điếu × ${item.count} (tổng ${formatShortDuration(item.totalAwakeMs)})`
+          ? `${formatShortDuration(item.eachIntervalMs)}/điếu × ${item.count}`
           : `Nhịn được ${formatShortDuration(item.eachIntervalMs)}`;
       return `
         <div class="log-item">
           <div class="log-left">
-            <span class="log-pill">+${item.count} điếu</span>
+            <span class="log-pill">+${item.count}</span>
             <span>${splitExplain}</span>
           </div>
           <span class="log-right">${formatTimeHHMM(item.timestamp)}</span>
@@ -510,9 +530,6 @@ function renderLogs() {
     .join('');
 }
 
-/**
- * Cập nhật giao diện mỗi giây & kiểm tra mốc nhắc 1 tiếng
- */
 function updateUI(now = Date.now()) {
   const sleeping = isSleepingTime(new Date(now));
 
@@ -524,69 +541,39 @@ function updateUI(now = Date.now()) {
     sleepBanner.classList.add('hidden');
   }
 
-  // Thời gian thức đã duy trì từ lần hút gần nhất
   const currentAwakeMs = getAwakeDurationMs(state.streakStartMs, now);
   currentStreakTimer.textContent = formatHMS(currentAwakeMs);
 
   const lastLog = state.logs[0];
   if (lastLog) {
-    lastSmokeLabel.textContent = `Từ lần hút gần nhất lúc ${formatTimeHHMM(lastLog.timestamp)} (trừ ngủ 23:00–07:30)`;
+    lastSmokeLabel.textContent = `Lần hút gần nhất: ${formatTimeHHMM(lastLog.timestamp)} (trừ ngủ 23:00–07:30)`;
   } else {
-    lastSmokeLabel.textContent = `Bắt đầu đếm lúc ${formatTimeHHMM(state.streakStartMs)} (trừ ngủ 23:00–07:30)`;
+    lastSmokeLabel.textContent = `Bắt đầu: ${formatTimeHHMM(state.streakStartMs)} (trừ ngủ 23:00–07:30)`;
   }
 
-  // Tính các chỉ số
   const metrics = computeMetrics(now);
 
   pastRecordValue.textContent = formatShortDuration(metrics.pastRecordMs);
   monthlyAvgValue.textContent = formatShortDuration(metrics.monthlyAvgMs);
   monthlyAvgSub.textContent =
-    metrics.sumCigs30d > 0 ? `Qua ${metrics.sumCigs30d} điếu (30 ngày)` : 'Chưa có điếu nào';
+    metrics.sumCigs30d > 0 ? `${metrics.sumCigs30d} điếu / 30 ngày` : 'Chưa có dữ liệu';
   todayCountValue.textContent = String(metrics.todayCigs);
   todayCountSub.textContent =
-    metrics.todayCigs === 0 ? 'Chưa hút điếu nào' : `Đã hút hôm nay`;
+    metrics.todayCigs === 0 ? 'Chưa hút' : 'Điếu hôm nay';
 
-  // Hiển thị huy hiệu nếu chuỗi hiện tại đang vượt kỷ lục cũ (khi đã có kỷ lục cũ)
   if (metrics.pastRecordMs > 0 && currentAwakeMs > metrics.pastRecordMs) {
     liveRecordBadge.classList.remove('hidden');
   } else {
     liveRecordBadge.classList.add('hidden');
   }
 
-  // Cập nhật preview chia thời gian trên 3 nút (T/1, T/2, T/3)
-  const split1Text = `${formatShortDuration(currentAwakeMs)} / điếu`;
-  const split2Text = `${formatShortDuration(Math.round(currentAwakeMs / 2))} / điếu`;
-  const split3Text = `${formatShortDuration(Math.round(currentAwakeMs / 3))} / điếu`;
-
-  previewSplit1.textContent = split1Text;
-  previewSplit2.textContent = split2Text;
-  previewSplit3.textContent = split3Text;
-
-  // Cập nhật số liệu trong Modal 1 tiếng
   modalCurrentStreak.textContent = formatShortDuration(currentAwakeMs);
   modalPastRecord.textContent = formatShortDuration(metrics.pastRecordMs);
   modalMonthlyAvg.textContent = formatShortDuration(metrics.monthlyAvgMs);
   modalTodayCount.textContent = `${metrics.todayCigs} điếu`;
-  modalSplit1.textContent = split1Text;
-  modalSplit2.textContent = split2Text;
-  modalSplit3.textContent = split3Text;
 
-  // Tiến độ 1 tiếng thức kể từ lần check-in gần nhất
+  // Kiểm tra nổi popup sau mỗi 1 tiếng thức
   const awakeSinceCheckInMs = getAwakeDurationMs(state.lastCheckInMs, now);
-  const progressPct = Math.min(100, (awakeSinceCheckInMs / ONE_HOUR_MS) * 100);
-  hourlyBarFill.style.width = `${progressPct.toFixed(1)}%`;
-
-  const remainingMs = Math.max(0, ONE_HOUR_MS - (awakeSinceCheckInMs % ONE_HOUR_MS));
-  const remMin = Math.floor(remainingMs / 60000);
-  const remSec = Math.floor((remainingMs % 60000) / 1000);
-
-  if (sleeping) {
-    nextCheckInText.textContent = 'Đang giờ ngủ (tạm dừng)';
-  } else {
-    nextCheckInText.textContent = `Còn ${remMin}p${String(remSec).padStart(2, '0')}s nổi nhắc`;
-  }
-
-  // Kiểm tra nếu đã đủ >= 1 tiếng thức (và không trong giờ ngủ) thì nổi Popup
   const currentHourCycle = Math.floor(awakeSinceCheckInMs / ONE_HOUR_MS);
   if (!sleeping && currentHourCycle >= 1 && currentHourCycle > state.lastAlertedHourCycle) {
     state.lastAlertedHourCycle = currentHourCycle;
@@ -598,56 +585,47 @@ function updateUI(now = Date.now()) {
 }
 
 /**
- * Cài đặt quyền Web Notification
+ * Tự động yêu cầu quyền thông báo khi mở app / chạm màn hình
  */
-function updateNotifButtonUI() {
-  if (!('Notification' in window)) {
-    btnNotif.textContent = '🔕 Không hỗ trợ';
-    return;
-  }
-  if (Notification.permission === 'granted') {
-    btnNotif.textContent = '🔔 Đã bật nhắc';
-    btnNotif.classList.add('active-notif');
-  } else if (Notification.permission === 'denied') {
-    btnNotif.textContent = '🔕 Đã chặn TB';
-    btnNotif.classList.remove('active-notif');
-  } else {
-    btnNotif.textContent = '🔔 Bật nhắc';
-    btnNotif.classList.remove('active-notif');
+function autoRequestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().catch(() => {});
   }
 }
 
-async function requestNotificationPermission() {
-  if (!('Notification' in window)) {
-    showToast('Trình duyệt này không hỗ trợ thông báo đẩy');
-    return;
-  }
-  const perm = await Notification.requestPermission();
-  updateNotifButtonUI();
-  if (perm === 'granted') {
-    showToast('🔔 Đã bật thông báo nhắc mỗi 1 tiếng!');
-  } else {
-    showToast('Bạn có thể cấp quyền thông báo trong Cài đặt trình duyệt');
-  }
-}
-
-// Gắn sự kiện cho tất cả các nút [data-smoke] (cả màn hình chính & trong popup)
+// Event Listeners
 document.querySelectorAll('[data-smoke]').forEach((btn) => {
   btn.addEventListener('click', () => {
+    autoRequestNotificationPermission();
     const count = Number(btn.getAttribute('data-smoke'));
     handleSmokeButton(count);
   });
 });
 
 btnUndo.addEventListener('click', handleUndo);
-btnResetStart.addEventListener('click', handleResetStart);
 btnTestPopup.addEventListener('click', () => {
   openHourlyModal();
   playHourlyAlertSound();
 });
-btnNotif.addEventListener('click', requestNotificationPermission);
 
-// Đăng ký Service Worker cho PWA
+btnUserModal.addEventListener('click', openUserModal);
+btnCloseUserModal.addEventListener('click', closeUserModal);
+userModal.addEventListener('click', (e) => {
+  if (e.target === userModal) closeUserModal();
+});
+
+userForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const val = userNameInput.value.trim();
+  if (val) {
+    switchUser(val);
+  }
+});
+
+// Tự bật thông báo khi tương tác
+document.addEventListener('click', autoRequestNotificationPermission, { once: true });
+
+// Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -659,18 +637,18 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Mở popup ngay nếu đi từ thông báo vào (?prompt=1)
 if (new URLSearchParams(window.location.search).get('prompt') === '1') {
   openHourlyModal();
 }
 
-// Khởi chạy ban đầu + đồng bộ dữ liệu Cloud
-updateNotifButtonUI();
+// Khởi chạy
+headerUserName.textContent = currentUser;
 renderLogs();
 updateUI(Date.now());
 pullCloudState();
+autoRequestNotificationPermission();
 
-// Tự động đồng bộ khi chuyển lại tab/mở lại màn hình ĐT hoặc mỗi 5 giây
+// Định kỳ đồng bộ
 window.addEventListener('focus', () => pullCloudState());
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
@@ -681,7 +659,6 @@ setInterval(() => {
   pullCloudState();
 }, 5000);
 
-// Cập nhật đồng hồ mỗi giây
 setInterval(() => {
   updateUI(Date.now());
 }, 1000);
