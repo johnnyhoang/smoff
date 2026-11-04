@@ -432,6 +432,21 @@ function closeHourlyModal() {
   hourlyModal.classList.add('hidden');
 }
 
+function calculateIntervalAwakeMs(startMs, endMs, count) {
+  let awakeMs = getAwakeDurationMs(startMs, endMs);
+  const startInSleep = isSleepingTime(new Date(startMs));
+  const endInSleep = isSleepingTime(new Date(endMs));
+
+  // Nếu hút ngoài giờ ngủ (23:00 - 07:30): tính 1 tiếng cho mỗi điếu ngoài giờ
+  if (endInSleep) {
+    awakeMs += count * ONE_HOUR_MS;
+  } else if (startInSleep) {
+    // Nếu mốc bắt đầu hút lúc nửa đêm, điếu này hút ban ngày: cộng thêm 1 tiếng thức ngoài giờ
+    awakeMs += ONE_HOUR_MS;
+  }
+  return awakeMs;
+}
+
 /**
  * Xử lý khi bấm nút hút (1, 2, 3) hoặc chưa hút (0)
  */
@@ -442,14 +457,17 @@ function handleSmokeButton(count) {
     state.lastCheckInMs = now;
     state.lastAlertedHourCycle = 0;
     closeHourlyModal();
-    const currentAwakeMs = getAwakeDurationMs(state.streakStartMs, now);
+    let currentAwakeMs = getAwakeDurationMs(state.streakStartMs, now);
+    if (!isSleepingTime(new Date(now)) && isSleepingTime(new Date(state.streakStartMs))) {
+      currentAwakeMs += ONE_HOUR_MS;
+    }
     showToast(`Tiếp tục giữ chuỗi: ${formatShortDuration(currentAwakeMs)}`);
     updateUI(now);
     pushCloudState();
     return;
   }
 
-  const totalAwakeMs = getAwakeDurationMs(state.streakStartMs, now);
+  const totalAwakeMs = calculateIntervalAwakeMs(state.streakStartMs, now, count);
   const eachIntervalMs = Math.round(totalAwakeMs / count);
 
   const newEntry = {
@@ -539,7 +557,10 @@ function updateUI(now = Date.now()) {
     sleepBanner.classList.add('hidden');
   }
 
-  const currentAwakeMs = getAwakeDurationMs(state.streakStartMs, now);
+  let currentAwakeMs = getAwakeDurationMs(state.streakStartMs, now);
+  if (!isSleepingTime(new Date(now)) && isSleepingTime(new Date(state.streakStartMs))) {
+    currentAwakeMs += ONE_HOUR_MS;
+  }
   currentStreakTimer.textContent = formatHMS(currentAwakeMs);
 
   const lastLog = state.logs[0];
