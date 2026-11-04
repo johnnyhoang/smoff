@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1120" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Smoff" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <title>Smoff — Theo dõi không hút thuốc</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="brand">
+        <span id="statusDot" class="brand-dot"></span>
+        <span class="brand-title">Smoff</span>
+        <span id="syncBadge" class="sync-badge">☁️ Đang đồng bộ...</span>
+      </div>
+      <div class="header-actions">
+        <button id="btnTestPopup" class="icon-btn" type="button" title="Xem thử popup nhắc mỗi 1 tiếng">
+          ⚡ Popup 1h
+        </button>
+        <button id="btnNotif" class="icon-btn" type="button">
+          🔔 Bật nhắc
+        </button>
+      </div>
+    </header>
+
+    <!-- Sleep Mode Indicator (23:00 - 07:30) -->
+    <div id="sleepBanner" class="sleep-banner hidden">
+      <span>🌙 Đang giờ ngủ (23:00–07:30) — Tạm dừng đếm</span>
+      <strong>07:30 tiếp tục</strong>
+    </div>
+
+    <!-- Main Streak Hero -->
+    <section class="hero-card">
+      <div class="hero-label">Hiện tại đã duy trì không hút</div>
+      <div id="currentStreakTimer" class="hero-timer">00:00:00</div>
+      <div class="hero-sub">
+        <span id="lastSmokeLabel">Tính từ lúc bắt đầu (đã trừ giờ ngủ 23:00–07:30)</span>
+        <span id="liveRecordBadge" class="badge-record hidden">🔥 Vượt kỷ lục cũ!</span>
+      </div>
+
+      <!-- 1-Hour Check-in Progress -->
+      <div class="hourly-bar-wrap" title="Tiến độ đến lần nổi popup 1 tiếng tiếp theo">
+        <div id="hourlyBarFill" class="hourly-bar-fill"></div>
+      </div>
+      <div class="hourly-caption">
+        <span>Nhắc sau mỗi 1h thức</span>
+        <span id="nextCheckInText">Còn 60p00s</span>
+      </div>
+    </section>
+
+    <!-- Key Metrics Grid -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-title">Kỷ lục quá khứ</span>
+        <span id="pastRecordValue" class="stat-value highlight-record">0h 00p</span>
+        <span class="stat-foot">Lâu nhất giữa 2 điếu</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-title">TB 1 tháng qua</span>
+        <span id="monthlyAvgValue" class="stat-value highlight-avg">0h 00p</span>
+        <span id="monthlyAvgSub" class="stat-foot">Chưa có dữ liệu</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-title">Số điếu hôm nay</span>
+        <span id="todayCountValue" class="stat-value highlight-today">0</span>
+        <span id="todayCountSub" class="stat-foot">Điếu trong ngày</span>
+      </div>
+    </section>
+
+    <!-- 3 Proactive Action Buttons on Main Screen (Đã hút 1, 2, 3 bất cứ lúc nào) -->
+    <section class="actions-card">
+      <div class="actions-header">
+        <span class="actions-title">Bấm ghi nhận hút bất cứ lúc nào (Tự chia thời gian & Reset đếm)</span>
+      </div>
+      <div class="smoke-buttons-row main-smoke-row">
+        <button class="btn btn-smoke-1 btn-large" data-smoke="1" type="button">
+          <span class="btn-main-text">🚬 Đã hút 1</span>
+          <span class="btn-sub" id="previewSplit1">0p / điếu</span>
+        </button>
+        <button class="btn btn-smoke-2 btn-large" data-smoke="2" type="button">
+          <span class="btn-main-text">🚬 Đã hút 2</span>
+          <span class="btn-sub" id="previewSplit2">0p / điếu</span>
+        </button>
+        <button class="btn btn-smoke-3 btn-large" data-smoke="3" type="button">
+          <span class="btn-main-text">🚬 Đã hút 3</span>
+          <span class="btn-sub" id="previewSplit3">0p / điếu</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Recent Logs & Undo -->
+    <section class="history-card">
+      <div class="history-header">
+        <span class="history-title">Lịch sử bấm hôm nay</span>
+        <div style="display:flex; gap:10px;">
+          <button id="btnUndo" class="text-btn hidden" type="button">↩ Hoàn tác</button>
+          <button id="btnResetStart" class="text-btn danger" type="button">Đặt lại mốc</button>
+        </div>
+      </div>
+      <div id="logList" class="log-list">
+        <div class="empty-log">Chưa có lần hút nào được ghi nhận hôm nay</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 1-Hour Check-in Popup Modal -->
+  <div id="hourlyModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <span class="modal-badge">⏰ Điểm danh mỗi 1 tiếng</span>
+      <h2 class="modal-title">Tình hình 1 tiếng qua thế nào?</h2>
+
+      <div class="modal-stats">
+        <div class="modal-stat-row">
+          <span class="modal-stat-label">Hôm nay đã duy trì:</span>
+          <span id="modalCurrentStreak" class="modal-stat-val" style="color:#ffffff;">0h 00p</span>
+        </div>
+        <div class="modal-stat-row">
+          <span class="modal-stat-label">Kỷ lục trong quá khứ:</span>
+          <span id="modalPastRecord" class="modal-stat-val" style="color:#34d399;">0h 00p</span>
+        </div>
+        <div class="modal-stat-row">
+          <span class="modal-stat-label">TB 1 tháng qua hút lại:</span>
+          <span id="modalMonthlyAvg" class="modal-stat-val" style="color:#38bdf8;">0h 00p</span>
+        </div>
+        <div class="modal-stat-row">
+          <span class="modal-stat-label">Số điếu đã hút hôm nay:</span>
+          <span id="modalTodayCount" class="modal-stat-val" style="color:#fbbf24;">0 điếu</span>
+        </div>
+      </div>
+
+      <div class="smoke-buttons-row">
+        <button class="btn btn-smoke-1" data-smoke="1" type="button">
+          <span>Đã hút 1</span>
+          <span class="btn-sub" id="modalSplit1">0p/điếu</span>
+        </button>
+        <button class="btn btn-smoke-2" data-smoke="2" type="button">
+          <span>Đã hút 2</span>
+          <span class="btn-sub" id="modalSplit2">0p/điếu</span>
+        </button>
+        <button class="btn btn-smoke-3" data-smoke="3" type="button">
+          <span>Đã hút 3</span>
+          <span class="btn-sub" id="modalSplit3">0p/điếu</span>
+        </button>
+      </div>
+
+      <button class="btn btn-no-smoke" data-smoke="0" type="button">
+        <span>✅ Chưa hút</span>
+        <span class="btn-sub">Tiếp tục giữ chuỗi & nhắc lại sau 1 tiếng</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast feedback -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
