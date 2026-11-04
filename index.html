@@ -15,7 +15,7 @@
 </head>
 <body>
   <main class="app-container">
-    <!-- Top Header -->
+    <!-- Header -->
     <header class="app-header">
       <div class="brand">
         <span id="statusDot" class="brand-dot"></span>
@@ -27,112 +27,108 @@
           <span id="headerUserName">johnnyhoang</span>
         </button>
         <button id="btnTestPopup" class="icon-btn" type="button" title="Xem thử popup 1h">
-          ⚡ Test 1h
+          ⚡ Test
         </button>
       </div>
     </header>
 
-    <!-- Sleep Mode Indicator (23:00 - 07:30) -->
+    <!-- Sleep Mode Indicator -->
     <div id="sleepBanner" class="sleep-banner hidden">
-      <span>🌙 Đang giờ ngủ (23:00–07:30) — Tạm dừng đếm</span>
-      <strong>07:30 tiếp tục</strong>
+      <span>🌙 Giờ ngủ (23:00–07:30)</span>
+      <strong>Tạm dừng</strong>
     </div>
 
     <!-- Main Streak Hero -->
     <section class="hero-card">
-      <div class="hero-label">Đã duy trì không hút</div>
+      <div class="hero-label">Không hút</div>
       <div id="currentStreakTimer" class="hero-timer">00:00:00</div>
       <div class="hero-sub">
-        <span id="lastSmokeLabel">Tính từ mốc gần nhất (trừ ngủ 23:00–07:30)</span>
-        <span id="liveRecordBadge" class="badge-record hidden">🔥 Vượt kỷ lục cũ!</span>
+        <span id="lastSmokeLabel">Bắt đầu</span>
+        <span id="liveRecordBadge" class="badge-record hidden">🔥 Kỷ lục mới!</span>
       </div>
     </section>
 
     <!-- Key Metrics Grid -->
     <section class="stats-grid">
       <div class="stat-card">
-        <span class="stat-title">Kỷ lục quá khứ</span>
+        <span class="stat-title">Nghỉ hút lâu nhất</span>
         <span id="pastRecordValue" class="stat-value highlight-record">0h 00p</span>
-        <span class="stat-foot">Lâu nhất giữa 2 điếu</span>
       </div>
       <div class="stat-card">
-        <span class="stat-title">TB 1 tháng qua</span>
+        <span class="stat-title">Trung bình 1 tháng</span>
         <span id="monthlyAvgValue" class="stat-value highlight-avg">0h 00p</span>
-        <span id="monthlyAvgSub" class="stat-foot">Chưa có dữ liệu</span>
       </div>
       <div class="stat-card">
-        <span class="stat-title">Số điếu hôm nay</span>
+        <span class="stat-title">Hút hôm nay</span>
         <span id="todayCountValue" class="stat-value highlight-today">0</span>
-        <span id="todayCountSub" class="stat-foot">Điếu trong ngày</span>
       </div>
     </section>
 
-    <!-- 3 Action Buttons on Main Screen -->
+    <!-- 3 Action Buttons -->
     <section class="actions-card">
       <div class="smoke-buttons-row main-smoke-row">
         <button class="btn btn-smoke-1 btn-large" data-smoke="1" type="button">
-          <span class="btn-main-text">🚬 Đã hút 1</span>
+          <span class="btn-main-text">🚬 Hút 1</span>
         </button>
         <button class="btn btn-smoke-2 btn-large" data-smoke="2" type="button">
-          <span class="btn-main-text">🚬 Đã hút 2</span>
+          <span class="btn-main-text">🚬 Hút 2</span>
         </button>
         <button class="btn btn-smoke-3 btn-large" data-smoke="3" type="button">
-          <span class="btn-main-text">🚬 Đã hút 3</span>
+          <span class="btn-main-text">🚬 Hút 3</span>
         </button>
       </div>
     </section>
 
-    <!-- Recent Logs & Undo -->
+    <!-- History & Undo -->
     <section class="history-card">
       <div class="history-header">
-        <span class="history-title">Lịch sử hôm nay</span>
+        <span class="history-title">Hôm nay</span>
         <button id="btnUndo" class="text-btn hidden" type="button">↩ Hoàn tác</button>
       </div>
       <div id="logList" class="log-list">
-        <div class="empty-log">Chưa có lần hút nào được ghi nhận hôm nay</div>
+        <div class="empty-log">Chưa hút điếu nào</div>
       </div>
     </section>
   </main>
 
-  <!-- 1-Hour Check-in Popup Modal -->
+  <!-- 1-Hour Popup Modal -->
   <div id="hourlyModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
     <div class="modal-card">
-      <span class="modal-badge">⏰ Điểm danh mỗi 1 tiếng</span>
-      <h2 class="modal-title">Tình hình 1 tiếng qua thế nào?</h2>
+      <h2 class="modal-title">1 tiếng vừa qua</h2>
 
       <div class="modal-stats">
         <div class="modal-stat-row">
-          <span class="modal-stat-label">Hôm nay đã duy trì:</span>
+          <span class="modal-stat-label">Đang duy trì</span>
           <span id="modalCurrentStreak" class="modal-stat-val" style="color:#ffffff;">0h 00p</span>
         </div>
         <div class="modal-stat-row">
-          <span class="modal-stat-label">Kỷ lục trong quá khứ:</span>
+          <span class="modal-stat-label">Nghỉ lâu nhất</span>
           <span id="modalPastRecord" class="modal-stat-val" style="color:#34d399;">0h 00p</span>
         </div>
         <div class="modal-stat-row">
-          <span class="modal-stat-label">TB 1 tháng qua hút lại:</span>
+          <span class="modal-stat-label">TB 1 tháng</span>
           <span id="modalMonthlyAvg" class="modal-stat-val" style="color:#38bdf8;">0h 00p</span>
         </div>
         <div class="modal-stat-row">
-          <span class="modal-stat-label">Số điếu đã hút hôm nay:</span>
+          <span class="modal-stat-label">Hút hôm nay</span>
           <span id="modalTodayCount" class="modal-stat-val" style="color:#fbbf24;">0 điếu</span>
         </div>
       </div>
 
       <div class="smoke-buttons-row">
         <button class="btn btn-smoke-1" data-smoke="1" type="button">
-          <span>Đã hút 1</span>
+          <span>Hút 1</span>
         </button>
         <button class="btn btn-smoke-2" data-smoke="2" type="button">
-          <span>Đã hút 2</span>
+          <span>Hút 2</span>
         </button>
         <button class="btn btn-smoke-3" data-smoke="3" type="button">
-          <span>Đã hút 3</span>
+          <span>Hút 3</span>
         </button>
       </div>
 
       <button class="btn btn-no-smoke" data-smoke="0" type="button">
-        <span>✅ Chưa hút</span>
+        <span>Chưa hút</span>
       </button>
     </div>
   </div>
@@ -144,21 +140,20 @@
         <h2 class="modal-title" style="text-align:left;">Người theo dõi</h2>
         <button id="btnCloseUserModal" class="close-btn" type="button" aria-label="Đóng">&times;</button>
       </div>
-      <p class="user-modal-desc">Nhập tên để theo dõi riêng. Dữ liệu sẽ đồng bộ giữa các thiết bị dùng chung tên này.</p>
       <form id="userForm" class="user-form">
         <div class="user-input-row">
-          <input id="userNameInput" class="user-input" type="text" placeholder="vd: johnnyhoang, nga..." maxlength="30" required autocomplete="off" />
+          <input id="userNameInput" class="user-input" type="text" placeholder="Tên theo dõi (vd: johnnyhoang, nga...)" maxlength="30" required autocomplete="off" />
           <button class="btn-save-user" type="submit">Lưu</button>
         </div>
       </form>
       <div id="recentUsersSection" class="recent-users-section hidden">
-        <span class="recent-users-title">Người tham gia đã lưu:</span>
+        <span class="recent-users-title">Người tham gia:</span>
         <div id="recentUsersList" class="recent-users-list"></div>
       </div>
     </div>
   </div>
 
-  <!-- Toast feedback -->
+  <!-- Toast -->
   <div id="toast" class="toast hidden"></div>
 
   <script src="app.js"></script>

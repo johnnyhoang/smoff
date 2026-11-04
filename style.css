@@ -196,22 +196,24 @@ html, body {
   background: var(--card);
   border: 1px solid var(--card-border);
   border-radius: 16px;
-  padding: 12px 10px;
+  padding: 14px 8px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 4px;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
 }
 
 .stat-title {
   font-size: 0.72rem;
   color: var(--text-muted);
   line-height: 1.25;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .stat-value {
-  font-size: 1.15rem;
+  font-size: 1.22rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: var(--text);
@@ -227,11 +229,6 @@ html, body {
 
 .stat-value.highlight-today {
   color: #fbbf24;
-}
-
-.stat-foot {
-  font-size: 0.68rem;
-  color: var(--text-muted);
 }
 
 /* Action Buttons Section */

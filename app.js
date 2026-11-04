@@ -205,9 +205,7 @@ const liveRecordBadge = document.getElementById('liveRecordBadge');
 
 const pastRecordValue = document.getElementById('pastRecordValue');
 const monthlyAvgValue = document.getElementById('monthlyAvgValue');
-const monthlyAvgSub = document.getElementById('monthlyAvgSub');
 const todayCountValue = document.getElementById('todayCountValue');
-const todayCountSub = document.getElementById('todayCountSub');
 
 const logList = document.getElementById('logList');
 const btnUndo = document.getElementById('btnUndo');
@@ -546,20 +544,16 @@ function updateUI(now = Date.now()) {
 
   const lastLog = state.logs[0];
   if (lastLog) {
-    lastSmokeLabel.textContent = `Lần hút gần nhất: ${formatTimeHHMM(lastLog.timestamp)} (trừ ngủ 23:00–07:30)`;
+    lastSmokeLabel.textContent = `Lần cuối: ${formatTimeHHMM(lastLog.timestamp)}`;
   } else {
-    lastSmokeLabel.textContent = `Bắt đầu: ${formatTimeHHMM(state.streakStartMs)} (trừ ngủ 23:00–07:30)`;
+    lastSmokeLabel.textContent = `Bắt đầu: ${formatTimeHHMM(state.streakStartMs)}`;
   }
 
   const metrics = computeMetrics(now);
 
   pastRecordValue.textContent = formatShortDuration(metrics.pastRecordMs);
   monthlyAvgValue.textContent = formatShortDuration(metrics.monthlyAvgMs);
-  monthlyAvgSub.textContent =
-    metrics.sumCigs30d > 0 ? `${metrics.sumCigs30d} điếu / 30 ngày` : 'Chưa có dữ liệu';
   todayCountValue.textContent = String(metrics.todayCigs);
-  todayCountSub.textContent =
-    metrics.todayCigs === 0 ? 'Chưa hút' : 'Điếu hôm nay';
 
   if (metrics.pastRecordMs > 0 && currentAwakeMs > metrics.pastRecordMs) {
     liveRecordBadge.classList.remove('hidden');
