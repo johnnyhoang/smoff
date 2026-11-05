@@ -352,7 +352,7 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 160px;
+  max-height: 240px;
   overflow-y: auto;
 }
 
@@ -379,6 +379,20 @@ html, body {
   font-size: 0.72rem;
   background: rgba(245, 158, 11, 0.18);
   color: #fbbf24;
+}
+
+.log-duration {
+  font-weight: 700;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.log-duration.good {
+  color: #34d399; /* Xanh lá: thời gian không hút tốt */
+}
+
+.log-duration.bad {
+  color: #f87171; /* Đỏ: hút lại nhanh */
 }
 
 .log-right {

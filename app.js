@@ -528,8 +528,8 @@ function handleUndo() {
 }
 
 function renderLogs() {
-  const todayKey = getLocalDateKey(Date.now());
-  const todayLogs = state.logs.filter((l) => l.dateKey === todayKey);
+  const cutoff30d = Date.now() - THIRTY_DAYS_MS;
+  const monthlyLogs = state.logs.filter((l) => l.timestamp >= cutoff30d);
 
   if (state.logs.length > 0) {
     btnUndo.classList.remove('hidden');
@@ -537,24 +537,35 @@ function renderLogs() {
     btnUndo.classList.add('hidden');
   }
 
-  if (todayLogs.length === 0) {
-    logList.innerHTML = `<div class="empty-log">Chưa có lần hút nào hôm nay</div>`;
+  if (monthlyLogs.length === 0) {
+    logList.innerHTML = `<div class="empty-log">Chưa có lần hút nào</div>`;
     return;
   }
 
-  logList.innerHTML = todayLogs
+  const metrics = computeMetrics(Date.now());
+  const thresholdMs = metrics.monthlyAvgMs > 0 ? metrics.monthlyAvgMs : 2 * 3600 * 1000;
+  const todayKey = getLocalDateKey(Date.now());
+
+  logList.innerHTML = monthlyLogs
     .map((item) => {
-      const splitExplain =
-        item.count > 1
-          ? `${formatShortDuration(item.eachIntervalMs)}/điếu × ${item.count}`
-          : `Nhịn được ${formatShortDuration(item.eachIntervalMs)}`;
+      const isGood = item.eachIntervalMs >= thresholdMs;
+      const durationText = item.count > 1
+        ? `${formatShortDuration(item.eachIntervalMs)}/điếu × ${item.count}`
+        : `${formatShortDuration(item.eachIntervalMs)}`;
+
+      let timeLabel = formatTimeHHMM(item.timestamp);
+      if (item.dateKey && item.dateKey !== todayKey) {
+        const d = new Date(item.timestamp);
+        timeLabel = `${d.getDate()}/${d.getMonth() + 1} ${timeLabel}`;
+      }
+
       return `
         <div class="log-item">
           <div class="log-left">
             <span class="log-pill">+${item.count}</span>
-            <span>${splitExplain}</span>
+            <span class="log-duration ${isGood ? 'good' : 'bad'}">${durationText}</span>
           </div>
-          <span class="log-right">${formatTimeHHMM(item.timestamp)}</span>
+          <span class="log-right">${timeLabel}</span>
         </div>
       `;
     })
