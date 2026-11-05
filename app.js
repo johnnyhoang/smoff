@@ -351,6 +351,7 @@ function computeMetrics(nowMs = Date.now()) {
   let sumAwake30d = 0;
   let sumCigs30d = 0;
   let todayCigs = 0;
+  let earliestTs = state.streakStartMs || nowMs;
   const activeDays = new Set();
 
   for (const item of state.logs) {
@@ -361,11 +362,17 @@ function computeMetrics(nowMs = Date.now()) {
       sumAwake30d += item.totalAwakeMs;
       sumCigs30d += item.count;
       if (item.dateKey) activeDays.add(item.dateKey);
+      if (item.timestamp < earliestTs) {
+        earliestTs = item.timestamp;
+      }
     }
     if (item.dateKey === todayKey) {
       todayCigs += item.count;
     }
   }
+
+  const d = new Date(earliestTs);
+  const startDateStr = `${d.getDate()}/${d.getMonth() + 1}`;
 
   const monthlyAvgMs = sumCigs30d > 0 ? Math.round(sumAwake30d / sumCigs30d) : 0;
   const numDays = Math.max(1, activeDays.size);
@@ -376,7 +383,8 @@ function computeMetrics(nowMs = Date.now()) {
     monthlyAvgMs,
     sumCigs30d,
     dailyAvgCigs,
-    todayCigs
+    todayCigs,
+    startDateStr
   };
 }
 
@@ -583,7 +591,7 @@ function updateUI(now = Date.now()) {
 
   monthlyAvgValue.textContent = formatShortDuration(metrics.monthlyAvgMs);
   if (monthlyAvgSub) {
-    monthlyAvgSub.textContent = `${metrics.sumCigs30d} điếu cả tháng`;
+    monthlyAvgSub.textContent = `${metrics.sumCigs30d} điếu từ ${metrics.startDateStr}`;
   }
 
   todayCountValue.textContent = String(metrics.todayCigs);
@@ -599,7 +607,7 @@ function updateUI(now = Date.now()) {
 
   modalCurrentStreak.textContent = formatShortDuration(currentAwakeMs);
   modalPastRecord.textContent = formatShortDuration(metrics.pastRecordMs);
-  modalMonthlyAvg.textContent = `${formatShortDuration(metrics.monthlyAvgMs)} (${metrics.sumCigs30d} điếu)`;
+  modalMonthlyAvg.textContent = `${formatShortDuration(metrics.monthlyAvgMs)} (${metrics.sumCigs30d} điếu từ ${metrics.startDateStr})`;
   modalTodayCount.textContent = `${metrics.todayCigs} điếu (TB: ${metrics.dailyAvgCigs}/ngày)`;
 
   // Kiểm tra nổi popup sau mỗi 1 tiếng thức
