@@ -204,8 +204,11 @@ const lastSmokeLabel = document.getElementById('lastSmokeLabel');
 const liveRecordBadge = document.getElementById('liveRecordBadge');
 
 const pastRecordValue = document.getElementById('pastRecordValue');
+const pastRecordSub = document.getElementById('pastRecordSub');
 const monthlyAvgValue = document.getElementById('monthlyAvgValue');
+const monthlyAvgSub = document.getElementById('monthlyAvgSub');
 const todayCountValue = document.getElementById('todayCountValue');
+const todayCountSub = document.getElementById('todayCountSub');
 
 const logList = document.getElementById('logList');
 const btnUndo = document.getElementById('btnUndo');
@@ -346,17 +349,24 @@ function computeMetrics(nowMs = Date.now()) {
   const cutoff30d = nowMs - THIRTY_DAYS_MS;
 
   let pastRecordMs = 0;
+  let pastRecordDate = '';
   let sumAwake30d = 0;
   let sumCigs30d = 0;
   let todayCigs = 0;
+  const activeDays = new Set();
 
   for (const item of state.logs) {
     if (item.eachIntervalMs > pastRecordMs) {
       pastRecordMs = item.eachIntervalMs;
+      if (item.timestamp) {
+        const d = new Date(item.timestamp);
+        pastRecordDate = `${d.getDate()}/${d.getMonth() + 1}`;
+      }
     }
     if (item.timestamp >= cutoff30d) {
       sumAwake30d += item.totalAwakeMs;
       sumCigs30d += item.count;
+      if (item.dateKey) activeDays.add(item.dateKey);
     }
     if (item.dateKey === todayKey) {
       todayCigs += item.count;
@@ -364,11 +374,15 @@ function computeMetrics(nowMs = Date.now()) {
   }
 
   const monthlyAvgMs = sumCigs30d > 0 ? Math.round(sumAwake30d / sumCigs30d) : 0;
+  const numDays = Math.max(1, activeDays.size);
+  const dailyAvgCigs = sumCigs30d > 0 ? (sumCigs30d / numDays).toFixed(1) : '0';
 
   return {
     pastRecordMs,
+    pastRecordDate,
     monthlyAvgMs,
     sumCigs30d,
+    dailyAvgCigs,
     todayCigs
   };
 }
@@ -573,8 +587,19 @@ function updateUI(now = Date.now()) {
   const metrics = computeMetrics(now);
 
   pastRecordValue.textContent = formatShortDuration(metrics.pastRecordMs);
+  if (pastRecordSub) {
+    pastRecordSub.textContent = metrics.pastRecordDate ? `Ngày ${metrics.pastRecordDate}` : '—';
+  }
+
   monthlyAvgValue.textContent = formatShortDuration(metrics.monthlyAvgMs);
+  if (monthlyAvgSub) {
+    monthlyAvgSub.textContent = `${metrics.sumCigs30d} điếu cả tháng`;
+  }
+
   todayCountValue.textContent = String(metrics.todayCigs);
+  if (todayCountSub) {
+    todayCountSub.textContent = `TB: ${metrics.dailyAvgCigs} điếu/ngày`;
+  }
 
   if (metrics.pastRecordMs > 0 && currentAwakeMs > metrics.pastRecordMs) {
     liveRecordBadge.classList.remove('hidden');
@@ -584,8 +609,8 @@ function updateUI(now = Date.now()) {
 
   modalCurrentStreak.textContent = formatShortDuration(currentAwakeMs);
   modalPastRecord.textContent = formatShortDuration(metrics.pastRecordMs);
-  modalMonthlyAvg.textContent = formatShortDuration(metrics.monthlyAvgMs);
-  modalTodayCount.textContent = `${metrics.todayCigs} điếu`;
+  modalMonthlyAvg.textContent = `${formatShortDuration(metrics.monthlyAvgMs)} (${metrics.sumCigs30d} điếu)`;
+  modalTodayCount.textContent = `${metrics.todayCigs} điếu (TB: ${metrics.dailyAvgCigs}/ngày)`;
 
   // Kiểm tra nổi popup sau mỗi 1 tiếng thức
   const awakeSinceCheckInMs = getAwakeDurationMs(state.lastCheckInMs, now);
