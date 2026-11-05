@@ -204,7 +204,6 @@ const lastSmokeLabel = document.getElementById('lastSmokeLabel');
 const liveRecordBadge = document.getElementById('liveRecordBadge');
 
 const pastRecordValue = document.getElementById('pastRecordValue');
-const pastRecordSub = document.getElementById('pastRecordSub');
 const monthlyAvgValue = document.getElementById('monthlyAvgValue');
 const monthlyAvgSub = document.getElementById('monthlyAvgSub');
 const todayCountValue = document.getElementById('todayCountValue');
@@ -349,7 +348,6 @@ function computeMetrics(nowMs = Date.now()) {
   const cutoff30d = nowMs - THIRTY_DAYS_MS;
 
   let pastRecordMs = 0;
-  let pastRecordDate = '';
   let sumAwake30d = 0;
   let sumCigs30d = 0;
   let todayCigs = 0;
@@ -358,10 +356,6 @@ function computeMetrics(nowMs = Date.now()) {
   for (const item of state.logs) {
     if (item.eachIntervalMs > pastRecordMs) {
       pastRecordMs = item.eachIntervalMs;
-      if (item.timestamp) {
-        const d = new Date(item.timestamp);
-        pastRecordDate = `${d.getDate()}/${d.getMonth() + 1}`;
-      }
     }
     if (item.timestamp >= cutoff30d) {
       sumAwake30d += item.totalAwakeMs;
@@ -379,7 +373,6 @@ function computeMetrics(nowMs = Date.now()) {
 
   return {
     pastRecordMs,
-    pastRecordDate,
     monthlyAvgMs,
     sumCigs30d,
     dailyAvgCigs,
@@ -587,9 +580,6 @@ function updateUI(now = Date.now()) {
   const metrics = computeMetrics(now);
 
   pastRecordValue.textContent = formatShortDuration(metrics.pastRecordMs);
-  if (pastRecordSub) {
-    pastRecordSub.textContent = metrics.pastRecordDate ? `Ngày ${metrics.pastRecordDate}` : '—';
-  }
 
   monthlyAvgValue.textContent = formatShortDuration(metrics.monthlyAvgMs);
   if (monthlyAvgSub) {
