@@ -691,12 +691,12 @@ function updateUI(now = Date.now()) {
 
   monthlyAvgValue.textContent = formatShortDuration(metrics.monthlyAvgMs);
   if (monthlyAvgSub) {
-    monthlyAvgSub.textContent = `${metrics.sumCigs30d} điếu từ ${metrics.startDateStr}`;
+    monthlyAvgSub.textContent = `TB: ${metrics.dailyAvgCigs} điếu/ngày`;
   }
 
   todayCountValue.textContent = String(metrics.todayCigs);
   if (todayCountSub) {
-    todayCountSub.textContent = `TB: ${metrics.dailyAvgCigs} điếu/ngày`;
+    todayCountSub.textContent = `${metrics.sumCigs30d} điếu từ ${metrics.startDateStr}`;
   }
 
   if (metrics.pastRecordMs > 0 && currentAwakeMs > metrics.pastRecordMs) {
@@ -707,8 +707,8 @@ function updateUI(now = Date.now()) {
 
   modalCurrentStreak.textContent = formatShortDuration(currentAwakeMs);
   modalPastRecord.textContent = formatShortDuration(metrics.pastRecordMs);
-  modalMonthlyAvg.textContent = `${formatShortDuration(metrics.monthlyAvgMs)} (${metrics.sumCigs30d} điếu từ ${metrics.startDateStr})`;
-  modalTodayCount.textContent = `${metrics.todayCigs} điếu (TB: ${metrics.dailyAvgCigs}/ngày)`;
+  modalMonthlyAvg.textContent = `${formatShortDuration(metrics.monthlyAvgMs)} (TB: ${metrics.dailyAvgCigs}/ngày)`;
+  modalTodayCount.textContent = `${metrics.todayCigs} điếu (${metrics.sumCigs30d} điếu từ ${metrics.startDateStr})`;
 
   // Kiểm tra nổi popup sau mỗi 1 tiếng thức
   const awakeSinceCheckInMs = getAwakeDurationMs(state.lastCheckInMs, now);
