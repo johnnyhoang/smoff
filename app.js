@@ -388,27 +388,59 @@ function computeMetrics(nowMs = Date.now()) {
   };
 }
 
+let modalRepeatTimer = null;
+const MODAL_REMINDER_INTERVAL_MS = 5 * 60 * 1000; // 5 phút nhắc lại nếu chưa đóng
+
 function playHourlyAlertSound() {
   try {
     if (navigator.vibrate) {
-      navigator.vibrate([180, 100, 180]);
+      navigator.vibrate([120, 80, 160]);
     }
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
     const ctx = new AudioCtx();
-    const notes = [523.25, 659.25, 783.99];
-    notes.forEach((freq, idx) => {
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    // Tiếng chuông "ting ting" (tinh tinh) vui tai: 2 nốt chuông trong trẻo (E6 -> B6)
+    const chimes = [
+      { freq: 1318.5, delay: 0.00, duration: 0.45 }, // Ting 1 (E6)
+      { freq: 1975.5, delay: 0.16, duration: 0.70 }  // Ting 2 (B6)
+    ];
+
+    chimes.forEach(({ freq, delay, duration }) => {
+      const startTime = ctx.currentTime + delay;
+
+      // Nốt chính (sine tròn trịa)
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.001, ctx.currentTime + idx * 0.14);
-      gain.gain.exponentialRampToValueAtTime(0.16, ctx.currentTime + idx * 0.14 + 0.03);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.14 + 0.28);
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      // Attack nhanh, decay ngân vang
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.24, startTime + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
       osc.connect(gain);
       gain.connect(ctx.destination);
-      osc.start(ctx.currentTime + idx * 0.14);
-      osc.stop(ctx.currentTime + idx * 0.14 + 0.3);
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+
+      // Hài âm cao nhẹ tạo độ trong suốt, leng keng vui tai
+      const overtone = ctx.createOscillator();
+      const overGain = ctx.createGain();
+      overtone.type = 'sine';
+      overtone.frequency.setValueAtTime(freq * 2.0, startTime);
+      overGain.gain.setValueAtTime(0.0001, startTime);
+      overGain.gain.exponentialRampToValueAtTime(0.06, startTime + 0.012);
+      overGain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration * 0.6);
+
+      overtone.connect(overGain);
+      overGain.connect(ctx.destination);
+      overtone.start(startTime);
+      overtone.stop(startTime + duration * 0.6);
     });
   } catch (err) {}
 }
@@ -441,10 +473,36 @@ function sendHourlyNotification(currentAwakeMs, metrics) {
 function openHourlyModal() {
   hourlyModal.classList.remove('hidden');
   updateUI(Date.now());
+  playHourlyAlertSound();
+
+  // Reset timer nhắc lại sau 5 phút nếu chưa đóng
+  if (modalRepeatTimer) {
+    clearInterval(modalRepeatTimer);
+    modalRepeatTimer = null;
+  }
+
+  modalRepeatTimer = setInterval(() => {
+    if (!hourlyModal.classList.contains('hidden')) {
+      playHourlyAlertSound();
+      const now = Date.now();
+      let awakeMs = getAwakeDurationMs(state.streakStartMs, now);
+      const metrics = calculateMetrics(now);
+      sendHourlyNotification(awakeMs, metrics);
+    } else {
+      if (modalRepeatTimer) {
+        clearInterval(modalRepeatTimer);
+        modalRepeatTimer = null;
+      }
+    }
+  }, MODAL_REMINDER_INTERVAL_MS);
 }
 
 function closeHourlyModal() {
   hourlyModal.classList.add('hidden');
+  if (modalRepeatTimer) {
+    clearInterval(modalRepeatTimer);
+    modalRepeatTimer = null;
+  }
 }
 
 function calculateIntervalAwakeMs(startMs, endMs, count) {
@@ -628,7 +686,6 @@ function updateUI(now = Date.now()) {
     state.lastAlertedHourCycle = currentHourCycle;
     saveLocalState();
     openHourlyModal();
-    playHourlyAlertSound();
     sendHourlyNotification(currentAwakeMs, metrics);
   }
 }
@@ -654,7 +711,6 @@ document.querySelectorAll('[data-smoke]').forEach((btn) => {
 btnUndo.addEventListener('click', handleUndo);
 btnTestPopup.addEventListener('click', () => {
   openHourlyModal();
-  playHourlyAlertSound();
 });
 
 btnUserModal.addEventListener('click', openUserModal);
