@@ -35,7 +35,14 @@ jobs:
     - name: Build Android Release APK
       run: |
         cd android
-        ./gradlew assembleRelease --stacktrace
+        ./gradlew assembleRelease --stacktrace --info 2>&1 | tee ../build.log
+
+    - name: Upload Build Log on Failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-log
+        path: build.log
 
     - name: Prepare APK Output
       run: |
