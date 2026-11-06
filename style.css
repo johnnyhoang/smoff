@@ -11,6 +11,67 @@
   --sleep: #6366f1;
 }
 
+body.theme-light {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.08);
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --accent: #059669;
+  --accent-glow: rgba(5, 150, 105, 0.18);
+  --warn: #d97706;
+  --danger: #e11d48;
+  --sleep: #4f46e5;
+}
+
+body.theme-light .hero-card,
+body.theme-light .stat-card,
+body.theme-light .smoke-actions,
+body.theme-light .history-card,
+body.theme-light .modal-card {
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+}
+
+body.theme-light .user-pill-btn {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #0284c7;
+}
+
+body.theme-light .lang-btn,
+body.theme-light .theme-btn {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #334155;
+}
+
+body.theme-vibrant {
+  --bg: #0d0722;
+  --card: rgba(28, 16, 53, 0.88);
+  --card-border: rgba(236, 72, 153, 0.35);
+  --text: #ffffff;
+  --text-muted: #c4b5fd;
+  --accent: #00f59b;
+  --accent-glow: rgba(0, 245, 155, 0.35);
+  --warn: #ffd600;
+  --danger: #ff007f;
+  --sleep: #a855f7;
+  background-image: radial-gradient(circle at 50% 0%, rgba(168, 85, 247, 0.22), transparent 50%),
+                    radial-gradient(circle at 100% 100%, rgba(236, 72, 153, 0.18), transparent 40%);
+}
+
+body.theme-vibrant .hero-card {
+  border: 1px solid rgba(0, 245, 155, 0.4);
+  box-shadow: 0 0 25px rgba(0, 245, 155, 0.15);
+}
+
+body.theme-vibrant .lang-btn,
+body.theme-vibrant .theme-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(236, 72, 153, 0.35);
+  color: #f472b6;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -140,6 +201,25 @@ html, body {
 }
 
 .lang-btn:active {
+  transform: scale(0.92);
+}
+
+.theme-btn {
+  font-size: 0.88rem;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.theme-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.theme-btn:active {
   transform: scale(0.92);
 }
 

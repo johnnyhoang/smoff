@@ -10,6 +10,7 @@ final class SmoffStore: ObservableObject {
     @Published var showHourlySheet: Bool = false
     @Published var isNewRecord: Bool = false
     @Published var isEnglish: Bool
+    @Published var themeMode: SmoffThemeMode
 
     // Timer state
     @Published var currentAwakeMs: Double = 0
@@ -17,11 +18,17 @@ final class SmoffStore: ObservableObject {
 
     private let storageKey = "smoff_offline_state_v1"
     private let langKey = "smoff_is_english"
+    private let themeKey = "smoff_theme_mode"
     private var timerSubscription: AnyCancellable?
     private var snoozeTimerSubscription: AnyCancellable?
 
     init() {
         self.isEnglish = UserDefaults.standard.bool(forKey: "smoff_is_english")
+        let savedTheme = UserDefaults.standard.string(forKey: "smoff_theme_mode") ?? "dark"
+        let initialTheme = SmoffThemeMode(rawValue: savedTheme) ?? .dark
+        self.themeMode = initialTheme
+        SmoffTheme.currentMode = initialTheme
+
         let now = Date().timeIntervalSince1970 * 1000
         if let data = UserDefaults.standard.data(forKey: storageKey),
            let saved = try? JSONDecoder().decode(SavedState.self, from: data) {
@@ -73,6 +80,13 @@ final class SmoffStore: ObservableObject {
         isEnglish.toggle()
         UserDefaults.standard.set(isEnglish, forKey: langKey)
         scheduleNextBackgroundNotifications()
+    }
+
+    func toggleTheme() {
+        themeMode = themeMode.next
+        SmoffTheme.currentMode = themeMode
+        UserDefaults.standard.set(themeMode.rawValue, forKey: themeKey)
+        HapticManager.shared.impact(.light)
     }
 
     func openHourlyPrompt() {

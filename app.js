@@ -5,10 +5,14 @@
 const ACTIVE_USER_KEY = 'smoff_active_user';
 const RECENT_USERS_KEY = 'smoff_recent_users';
 const LANG_KEY = 'smoff_lang';
+const THEME_KEY = 'smoff_theme';
 const ONE_HOUR_MS = 60 * 60 * 1000;
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 let currentLang = localStorage.getItem(LANG_KEY) || 'vi';
+const THEMES = ['dark', 'light', 'vibrant'];
+const THEME_ICONS = { dark: '🌙', light: '☀️', vibrant: '🎨' };
+let currentTheme = localStorage.getItem(THEME_KEY) || 'dark';
 
 const I18N = {
   vi: {
@@ -276,6 +280,7 @@ let isSyncing = false;
 const statusDot = document.getElementById('statusDot');
 const headerUserName = document.getElementById('headerUserName');
 const btnLangToggle = document.getElementById('btnLangToggle');
+const btnThemeToggle = document.getElementById('btnThemeToggle');
 const btnUserModal = document.getElementById('btnUserModal');
 const userModal = document.getElementById('userModal');
 const userModalTitle = document.getElementById('userModalTitle');
@@ -356,6 +361,22 @@ function toggleLanguage() {
   applyLanguage();
   renderLogs();
   updateUI(Date.now());
+}
+
+function applyTheme() {
+  document.body.classList.remove('theme-light', 'theme-vibrant');
+  if (currentTheme === 'light') document.body.classList.add('theme-light');
+  if (currentTheme === 'vibrant') document.body.classList.add('theme-vibrant');
+  if (btnThemeToggle) {
+    btnThemeToggle.textContent = THEME_ICONS[currentTheme] || '🌙';
+  }
+}
+
+function toggleTheme() {
+  const idx = THEMES.indexOf(currentTheme);
+  currentTheme = THEMES[(idx + 1) % THEMES.length];
+  localStorage.setItem(THEME_KEY, currentTheme);
+  applyTheme();
 }
 
 function showToast(msg) {
@@ -887,6 +908,9 @@ btnUndo.addEventListener('click', handleUndo);
 if (btnLangToggle) {
   btnLangToggle.addEventListener('click', toggleLanguage);
 }
+if (btnThemeToggle) {
+  btnThemeToggle.addEventListener('click', toggleTheme);
+}
 
 btnUserModal.addEventListener('click', openUserModal);
 btnCloseUserModal.addEventListener('click', closeUserModal);
@@ -923,6 +947,7 @@ if (new URLSearchParams(window.location.search).get('prompt') === '1') {
 
 // Khởi chạy
 applyLanguage();
+applyTheme();
 headerUserName.textContent = currentUser;
 renderLogs();
 updateUI(Date.now());

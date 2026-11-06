@@ -81,7 +81,7 @@ struct HourlyModalSheet: View {
             .padding(.vertical, 16)
         }
         .background(SmoffTheme.cardBackground)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(store.themeMode == .light ? .light : .dark)
     }
 }
 

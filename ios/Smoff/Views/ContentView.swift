@@ -29,19 +29,35 @@ struct ContentView: View {
 
                         Spacer()
 
-                        Button(action: {
-                            store.toggleLanguage()
-                        }) {
-                            Text(store.isEnglish ? "VI" : "EN")
-                                .font(.system(size: 12, weight: .bold, design: .rounded))
-                                .foregroundColor(SmoffTheme.textPrimary)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(Color.white.opacity(0.08))
-                                .clipShape(Capsule())
-                                .overlay(
-                                    Capsule().stroke(Color.white.opacity(0.14), lineWidth: 1)
-                                )
+                        HStack(spacing: 6) {
+                            Button(action: {
+                                store.toggleLanguage()
+                            }) {
+                                Text(store.isEnglish ? "VI" : "EN")
+                                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                                    .foregroundColor(SmoffTheme.textPrimary)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(Color.white.opacity(store.themeMode == .light ? 0.8 : 0.08))
+                                    .clipShape(Capsule())
+                                    .overlay(
+                                        Capsule().stroke(SmoffTheme.cardBorder, lineWidth: 1)
+                                    )
+                            }
+
+                            Button(action: {
+                                store.toggleTheme()
+                            }) {
+                                Text(store.themeMode.icon)
+                                    .font(.system(size: 13))
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 5)
+                                    .background(Color.white.opacity(store.themeMode == .light ? 0.8 : 0.08))
+                                    .clipShape(Capsule())
+                                    .overlay(
+                                        Capsule().stroke(SmoffTheme.cardBorder, lineWidth: 1)
+                                    )
+                            }
                         }
                     }
                     .padding(.horizontal, 4)
@@ -96,7 +112,7 @@ struct ContentView: View {
                 .padding(.horizontal, 16)
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(store.themeMode == .light ? .light : .dark)
         .sheet(isPresented: $store.showHourlySheet) {
             HourlyModalSheet(store: store)
                 .presentationDetents([.fraction(0.68), .medium, .large])
