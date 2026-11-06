@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/shape_dialog_bg"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:id="@+id/dialogTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="1 tiếng vừa qua"
+        android:textColor="@color/text_primary_dark"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <!-- 4 Stats Recap Table -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/shape_modal_stats_bg"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp">
+
+            <TextView
+                android:id="@+id/dialogLabelStreak"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Đã nhịn"
+                android:textColor="@color/text_muted_dark"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/dialogValueStreak"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0p"
+                android:textColor="@color/text_primary_dark"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp">
+
+            <TextView
+                android:id="@+id/dialogLabelRecord"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Nhịn dai nhất"
+                android:textColor="@color/text_muted_dark"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/dialogValueRecord"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0p"
+                android:textColor="@color/emerald"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp">
+
+            <TextView
+                android:id="@+id/dialogLabelAvg"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Nhịn trung bình"
+                android:textColor="@color/text_muted_dark"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/dialogValueAvg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0p"
+                android:textColor="@color/sky"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp">
+
+            <TextView
+                android:id="@+id/dialogLabelToday"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Hút hôm nay"
+                android:textColor="@color/text_muted_dark"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/dialogValueToday"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 điếu"
+                android:textColor="@color/amber"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 3 Action Cigarette Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/dialogBtnSmoke1"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/btn_smoke_amber"
+            android:text="🚬"
+            android:textSize="20sp" />
+
+        <Button
+            android:id="@+id/dialogBtnSmoke2"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/btn_smoke_orange"
+            android:text="🚬🚬"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/dialogBtnSmoke3"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@drawable/btn_smoke_red"
+            android:text="🚬🚬🚬"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <!-- Large Green "Chưa hút" Button -->
+    <Button
+        android:id="@+id/dialogBtnNoSmoke"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:background="@drawable/btn_green_nosmoke"
+        android:text="Chưa hút"
+        android:textColor="#06281E"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+</LinearLayout>

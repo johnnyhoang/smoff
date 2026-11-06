@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Smoff</string>
+    <string name="channel_name">Smoff Nhắc nhở</string>
+    <string name="channel_desc">Thông báo định kỳ nhắc nhở giữ chuỗi không hút thuốc</string>
+</resources>

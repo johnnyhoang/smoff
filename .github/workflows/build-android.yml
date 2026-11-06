@@ -1,0 +1,71 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Generate Release Keystore
+      run: |
+        cd android/app
+        keytool -genkey -v -keystore smoff-release.keystore -alias smoff -keyalg RSA -keysize 2048 -validity 10000 -storepass smoff2026 -keypass smoff2026 -dname "CN=Smoff, OU=Apps, O=JohnnyHoang, C=VN"
+
+    - name: Grant Execute Permission for Gradlew
+      run: chmod +x android/gradlew
+
+    - name: Build Android Release APK
+      run: |
+        cd android
+        ./gradlew assembleRelease --stacktrace
+
+    - name: Prepare APK Output
+      run: |
+        mkdir -p release-output
+        cp android/app/build/outputs/apk/release/app-release.apk release-output/Smoff.apk
+        cp android/app/build/outputs/apk/release/app-release.apk ./Smoff.apk
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Smoff-Android-APK
+        path: release-output/Smoff.apk
+
+    - name: Create or Update GitHub Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/heads/main')
+      with:
+        tag_name: v1.0.0
+        name: "Smoff Android v1.0.0"
+        body: |
+          ### Smoff — Ứng dụng Android theo dõi không hút thuốc (Offline-First)
+          - ⚡ Siêu nhẹ, tiết kiệm pin tối đa, 100% chạy offline không cần internet.
+          - 🌙 Giữ chuỗi thời gian thức trừ giờ ngủ 23:00–07:30 (Múi giờ VN UTC+7).
+          - ⏰ Nhắc nhở sau 1 tiếng thức & tự động nhắc lại sau 15 phút nếu chưa hồi đáp.
+          - 🎨 Hỗ trợ 3 theme: Đen (🌙), Sáng (☀️), Sặc sỡ (🎨).
+          - 🌐 Chuyển đổi ngôn ngữ tức thì giữa Tiếng Việt và Tiếng Anh.
+          
+          **Tải về cài đặt**: Bấm tải file `Smoff.apk` bên dưới để cài trực tiếp vào điện thoại Android.
+        files: release-output/Smoff.apk
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

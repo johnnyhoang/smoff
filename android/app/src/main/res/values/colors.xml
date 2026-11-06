@@ -1,0 +1,36 @@
+<resources>
+    <!-- Dark Theme (Mặc định) -->
+    <color name="bg_dark">#0B0F19</color>
+    <color name="card_dark">#111827</color>
+    <color name="card_border_dark">#1F2937</color>
+    <color name="text_primary_dark">#F8FAFC</color>
+    <color name="text_muted_dark">#94A3B8</color>
+
+    <!-- Light Theme (Sáng) -->
+    <color name="bg_light">#F1F5F9</color>
+    <color name="card_light">#FFFFFF</color>
+    <color name="card_border_light">#E2E8F0</color>
+    <color name="text_primary_light">#0F172A</color>
+    <color name="text_muted_light">#64748B</color>
+
+    <!-- Vibrant Theme (Sặc sỡ) -->
+    <color name="bg_vibrant">#0D0722</color>
+    <color name="card_vibrant">#1C1035</color>
+    <color name="card_border_vibrant">#EC4899</color>
+    <color name="text_primary_vibrant">#FFFFFF</color>
+    <color name="text_muted_vibrant">#C4B5FD</color>
+
+    <!-- Accents -->
+    <color name="emerald">#10B981</color>
+    <color name="emerald_bg">#2910B981</color>
+    <color name="sky">#38BDF8</color>
+    <color name="sky_bg">#2938BDF8</color>
+    <color name="amber">#FBBF24</color>
+    <color name="amber_bg">#29FBBF24</color>
+    <color name="orange">#FB923C</color>
+    <color name="orange_bg">#29FB923C</color>
+    <color name="red">#EF4444</color>
+    <color name="red_bg">#29EF4444</color>
+    <color name="sleep_purple">#818CF8</color>
+    <color name="sleep_bg">#66312E81</color>
+</resources>

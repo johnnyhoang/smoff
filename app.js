@@ -43,6 +43,7 @@ const I18N = {
     userNamePlaceholder: 'Tên theo dõi (vd: johnnyhoang, nga...)',
     saveBtn: 'Lưu',
     recentUsersTitle: 'Người tham gia:',
+    downloadApk: '🤖 Tải app Android (Smoff.apk)',
     toastUserSwitch: (u) => `Đã chuyển sang: ${u}`,
     toastKeepStreak: (d) => `Tiếp tục giữ chuỗi: ${d}`,
     toastSmokeSingle: (d) => `+1 điếu (${d})`,
@@ -82,6 +83,7 @@ const I18N = {
     userNamePlaceholder: 'User name (e.g. johnnyhoang, nga...)',
     saveBtn: 'Save',
     recentUsersTitle: 'Trackers:',
+    downloadApk: '🤖 Download Android App (Smoff.apk)',
     toastUserSwitch: (u) => `Switched to: ${u}`,
     toastKeepStreak: (d) => `Keep going: ${d}`,
     toastSmokeSingle: (d) => `+1 cigarette (${d})`,
@@ -353,6 +355,8 @@ function applyLanguage() {
   if (userNameInput) userNameInput.placeholder = t.userNamePlaceholder;
   if (btnSaveUser) btnSaveUser.textContent = t.saveBtn;
   if (recentUsersTitle) recentUsersTitle.textContent = t.recentUsersTitle;
+  const btnDownloadApkText = document.getElementById('btnDownloadApkText');
+  if (btnDownloadApkText) btnDownloadApkText.textContent = t.downloadApk;
 }
 
 function toggleLanguage() {
