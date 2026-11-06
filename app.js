@@ -567,7 +567,7 @@ function computeMetrics(nowMs = Date.now()) {
 }
 
 let modalRepeatTimer = null;
-const MODAL_REMINDER_INTERVAL_MS = 5 * 60 * 1000; // 5 phút nhắc lại nếu chưa đóng
+const MODAL_REMINDER_INTERVAL_MS = 15 * 60 * 1000; // 15 phút nhắc lại nếu chưa đóng
 
 function playHourlyAlertSound() {
   try {

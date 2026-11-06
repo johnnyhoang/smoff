@@ -11,8 +11,10 @@ struct HeroCardView: View {
                 .tracking(1.2)
 
             Text(TimeService.formatHMS(ms: store.currentAwakeMs))
-                .font(.system(size: 46, weight: .heavy, design: .rounded))
+                .font(.system(size: 44, weight: .heavy, design: .rounded))
                 .monospacedDigit()
+                .minimumScaleFactor(0.75)
+                .lineLimit(1)
                 .foregroundColor(SmoffTheme.textPrimary)
                 .padding(.vertical, 2)
 

@@ -56,6 +56,59 @@ struct TimeService {
         return totalAwakeMs
     }
 
+    /// Tính chính xác thời điểm trong tương lai khi đạt thêm `neededAwakeMs` thời gian THỨC (đã tự động né khung ngủ 23:00 - 07:30)
+    static func calculateFutureDateForAwakeDuration(from startDate: Date = Date(), neededAwakeMs: Double, calendar: Calendar = .current) -> Date {
+        guard neededAwakeMs > 0 else { return startDate }
+
+        var remainingMs = neededAwakeMs
+        var cursor = startDate
+
+        while remainingMs > 0 {
+            let hour = calendar.component(.hour, from: cursor)
+
+            // Nếu cursor đang trong giờ ngủ (23:00 - 07:30)
+            if isSleepingTime(date: cursor, calendar: calendar) {
+                var comp = calendar.dateComponents([.year, .month, .day], from: cursor)
+                if hour == 23 {
+                    if let nextDay = calendar.date(byAdding: .day, value: 1, to: cursor) {
+                        comp = calendar.dateComponents([.year, .month, .day], from: nextDay)
+                    }
+                }
+                comp.hour = 7
+                comp.minute = 30
+                comp.second = 0
+                if let nextMorning = calendar.date(from: comp) {
+                    cursor = nextMorning
+                    continue
+                }
+            }
+
+            // Đang trong giờ thức: Tính thời gian còn lại đến 23:00
+            var comp = calendar.dateComponents([.year, .month, .day], from: cursor)
+            comp.hour = 23
+            comp.minute = 0
+            comp.second = 0
+            guard let sleepStart = calendar.date(from: comp) else { break }
+
+            let msUntilSleep = sleepStart.timeIntervalSince(cursor) * 1000
+            if remainingMs <= msUntilSleep {
+                return cursor.addingTimeInterval(remainingMs / 1000)
+            } else {
+                remainingMs -= msUntilSleep
+                if let nextDay = calendar.date(byAdding: .day, value: 1, to: cursor) {
+                    var nextAwakeComp = calendar.dateComponents([.year, .month, .day], from: nextDay)
+                    nextAwakeComp.hour = 7
+                    nextAwakeComp.minute = 30
+                    nextAwakeComp.second = 0
+                    if let nextMorning = calendar.date(from: nextAwakeComp) {
+                        cursor = nextMorning
+                    }
+                }
+            }
+        }
+        return cursor
+    }
+
     static func getLocalDateKey(date: Date = Date(), calendar: Calendar = .current) -> String {
         let formatter = DateFormatter()
         formatter.calendar = calendar

@@ -38,6 +38,7 @@ final class SmoffStore: ObservableObject {
 
         updateTick()
         startTimer()
+        scheduleNextBackgroundNotifications()
     }
 
     func startTimer() {
@@ -71,12 +72,13 @@ final class SmoffStore: ObservableObject {
     func toggleLanguage() {
         isEnglish.toggle()
         UserDefaults.standard.set(isEnglish, forKey: langKey)
+        scheduleNextBackgroundNotifications()
     }
 
     func openHourlyPrompt() {
         showHourlySheet = true
         SoundManager.shared.playChime()
-        NotificationManager.shared.scheduleFiveMinuteReminder(isEnglish: isEnglish)
+        NotificationManager.shared.scheduleFifteenMinuteReminder(isEnglish: isEnglish)
 
         let metrics = computeMetrics()
         NotificationManager.shared.sendHourlyNotification(
@@ -85,14 +87,14 @@ final class SmoffStore: ObservableObject {
             isEnglish: isEnglish
         )
 
-        // Sau 5 phút nếu chưa đóng sheet thì lại ting ting tiếp
+        // Sau 15 phút nếu chưa đóng sheet thì lại ting ting tiếp
         snoozeTimerSubscription?.cancel()
-        snoozeTimerSubscription = Timer.publish(every: 5 * 60, on: .main, in: .common)
+        snoozeTimerSubscription = Timer.publish(every: 15 * 60, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 guard let self = self, self.showHourlySheet else { return }
                 SoundManager.shared.playChime()
-                NotificationManager.shared.scheduleFiveMinuteReminder(isEnglish: self.isEnglish)
+                NotificationManager.shared.scheduleFifteenMinuteReminder(isEnglish: self.isEnglish)
             }
     }
 
@@ -100,7 +102,16 @@ final class SmoffStore: ObservableObject {
         showHourlySheet = false
         snoozeTimerSubscription?.cancel()
         snoozeTimerSubscription = nil
-        NotificationManager.shared.cancelFiveMinuteReminder()
+        NotificationManager.shared.cancelFifteenMinuteReminder()
+        scheduleNextBackgroundNotifications()
+    }
+
+    /// Lên lịch cho hệ thống iOS tự động đánh thức màn hình và phát chuông ting ting khi app đóng
+    func scheduleNextBackgroundNotifications() {
+        let nowMs = Date().timeIntervalSince1970 * 1000
+        let awakeSinceCheckIn = TimeService.getAwakeDurationMs(startMs: lastCheckInMs, endMs: nowMs)
+        let neededAwakeMs = max(5000, TimeService.oneHourMs - awakeSinceCheckIn.truncatingRemainder(dividingBy: TimeService.oneHourMs))
+        NotificationManager.shared.scheduleHourlyAndSnoozeSequence(neededAwakeMs: neededAwakeMs, isEnglish: isEnglish)
     }
 
     func recordSmoke(count: Int) {
@@ -156,6 +167,7 @@ final class SmoffStore: ObservableObject {
         HapticManager.shared.impact(.light)
         save()
         updateTick()
+        scheduleNextBackgroundNotifications()
     }
 
     struct Metrics {

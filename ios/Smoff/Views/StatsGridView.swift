@@ -7,7 +7,7 @@ struct StatsGridView: View {
         let metrics = store.computeMetrics()
         let en = store.isEnglish
 
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             // Cột 1: Nhịn dai nhất
             StatCard(
                 title: en ? "Best streak" : "Nhịn dai nhất",
@@ -42,33 +42,33 @@ private struct StatCard: View {
     let subtext: String?
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 3) {
             Text(title)
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
                 .foregroundColor(SmoffTheme.textMuted)
                 .lineLimit(1)
-                .minimumScaleFactor(0.8)
+                .minimumScaleFactor(0.65)
 
             Text(value)
-                .font(.system(size: 17, weight: .bold, design: .rounded))
+                .font(.system(size: 16, weight: .bold, design: .rounded))
                 .foregroundColor(valueColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
 
             if let sub = subtext {
                 Text(sub)
-                    .font(.system(size: 10, weight: .regular, design: .rounded))
+                    .font(.system(size: 9.5, weight: .regular, design: .rounded))
                     .foregroundColor(SmoffTheme.textMuted)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.75)
+                    .minimumScaleFactor(0.65)
             } else {
                 Spacer()
                     .frame(height: 12)
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .padding(.horizontal, 6)
+        .padding(.vertical, 10)
+        .padding(.horizontal, 4)
         .background(SmoffTheme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(

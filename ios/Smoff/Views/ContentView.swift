@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var store = SmoffStore()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ZStack {
@@ -98,11 +99,18 @@ struct ContentView: View {
         .preferredColorScheme(.dark)
         .sheet(isPresented: $store.showHourlySheet) {
             HourlyModalSheet(store: store)
-                .presentationDetents([.fraction(0.55), .medium])
+                .presentationDetents([.fraction(0.68), .medium, .large])
                 .presentationDragIndicator(.visible)
         }
         .onAppear {
             NotificationManager.shared.requestPermission()
+        }
+        .onChange(of: scenePhase) { newPhase in
+            if newPhase == .active {
+                store.updateTick()
+            } else if newPhase == .background {
+                store.scheduleNextBackgroundNotifications()
+            }
         }
     }
 }
