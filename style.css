@@ -173,6 +173,7 @@ html, body {
   justify-content: center;
   gap: 8px;
   flex-wrap: wrap;
+  min-height: 22px;
 }
 
 .badge-record {

@@ -679,10 +679,12 @@ function updateUI(now = Date.now()) {
   currentStreakTimer.textContent = formatHMS(currentAwakeMs);
 
   const lastLog = state.logs[0];
-  if (lastLog) {
-    lastSmokeLabel.textContent = `Lần cuối: ${formatTimeHHMM(lastLog.timestamp)}`;
-  } else {
-    lastSmokeLabel.textContent = `Bắt đầu: ${formatTimeHHMM(state.streakStartMs)}`;
+  if (lastSmokeLabel) {
+    if (lastLog) {
+      lastSmokeLabel.textContent = `Lần cuối: ${formatTimeHHMM(lastLog.timestamp)}`;
+    } else {
+      lastSmokeLabel.textContent = `Bắt đầu: ${formatTimeHHMM(state.streakStartMs)}`;
+    }
   }
 
   const metrics = computeMetrics(now);
