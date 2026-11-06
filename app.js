@@ -43,7 +43,14 @@ const I18N = {
     userNamePlaceholder: 'Tên theo dõi (vd: johnnyhoang, nga...)',
     saveBtn: 'Lưu',
     recentUsersTitle: 'Người tham gia:',
-    downloadApk: '🤖 Tải app Android (Smoff.apk)',
+    downloadApk: '🤖 Cài đặt app Android (Smoff.apk)',
+    downloadModalTitle: 'Cài đặt trên Android',
+    apkBadgeSub: 'Bản chính thức • Siêu nhẹ ~4.6 MB • 100% Offline',
+    downloadBtnText: 'Tải file Smoff.apk',
+    step1: 'Bấm nút <strong>Tải file Smoff.apk</strong> ở trên để tải về máy.',
+    step2: 'Mở thanh thông báo hoặc thư mục <em>Tải về (Downloads)</em>, bấm vào file <strong>Smoff.apk</strong>.',
+    step3: 'Bấm <strong>Cài đặt</strong> (nếu máy hỏi bảo mật, chọn <em>Bật cho phép từ nguồn này</em>).',
+    step4: 'Mở app và chọn <strong>Cho phép thông báo</strong> để nhận nhắc nhở đúng giờ!',
     toastUserSwitch: (u) => `Đã chuyển sang: ${u}`,
     toastKeepStreak: (d) => `Tiếp tục giữ chuỗi: ${d}`,
     toastSmokeSingle: (d) => `+1 điếu (${d})`,
@@ -83,7 +90,14 @@ const I18N = {
     userNamePlaceholder: 'User name (e.g. johnnyhoang, nga...)',
     saveBtn: 'Save',
     recentUsersTitle: 'Trackers:',
-    downloadApk: '🤖 Download Android App (Smoff.apk)',
+    downloadApk: '🤖 Install Android App (Smoff.apk)',
+    downloadModalTitle: 'Install on Android',
+    apkBadgeSub: 'Official release • Lightweight ~4.6 MB • 100% Offline',
+    downloadBtnText: 'Download Smoff.apk',
+    step1: 'Tap the <strong>Download Smoff.apk</strong> button above.',
+    step2: 'Open the notification shade or <em>Downloads</em> folder, tap <strong>Smoff.apk</strong>.',
+    step3: 'Tap <strong>Install</strong> (allow <em>Install unknown apps</em> if prompted).',
+    step4: 'Open the app and allow notifications for timely reminders!',
     toastUserSwitch: (u) => `Switched to: ${u}`,
     toastKeepStreak: (d) => `Keep going: ${d}`,
     toastSmokeSingle: (d) => `+1 cigarette (${d})`,
@@ -357,6 +371,21 @@ function applyLanguage() {
   if (recentUsersTitle) recentUsersTitle.textContent = t.recentUsersTitle;
   const btnDownloadApkText = document.getElementById('btnDownloadApkText');
   if (btnDownloadApkText) btnDownloadApkText.textContent = t.downloadApk;
+
+  const downloadModalHeading = document.getElementById('downloadModalHeading');
+  if (downloadModalHeading) downloadModalHeading.textContent = t.downloadModalTitle;
+  const apkBadgeSub = document.getElementById('apkBadgeSub');
+  if (apkBadgeSub) apkBadgeSub.textContent = t.apkBadgeSub;
+  const downloadBtnText = document.getElementById('downloadBtnText');
+  if (downloadBtnText) downloadBtnText.textContent = t.downloadBtnText;
+  const step1Text = document.getElementById('step1Text');
+  if (step1Text) step1Text.innerHTML = t.step1;
+  const step2Text = document.getElementById('step2Text');
+  if (step2Text) step2Text.innerHTML = t.step2;
+  const step3Text = document.getElementById('step3Text');
+  if (step3Text) step3Text.innerHTML = t.step3;
+  const step4Text = document.getElementById('step4Text');
+  if (step4Text) step4Text.innerHTML = t.step4;
 }
 
 function toggleLanguage() {
@@ -921,6 +950,38 @@ btnCloseUserModal.addEventListener('click', closeUserModal);
 userModal.addEventListener('click', (e) => {
   if (e.target === userModal) closeUserModal();
 });
+
+// Download Modal Handlers
+const downloadModal = document.getElementById('downloadModal');
+const btnDownloadModal = document.getElementById('btnDownloadModal');
+const btnCloseDownloadModal = document.getElementById('btnCloseDownloadModal');
+const btnOpenDownloadFromUser = document.getElementById('btnOpenDownloadFromUser');
+
+function openDownloadModal() {
+  if (downloadModal) downloadModal.classList.remove('hidden');
+}
+
+function closeDownloadModal() {
+  if (downloadModal) downloadModal.classList.add('hidden');
+}
+
+if (btnDownloadModal) {
+  btnDownloadModal.addEventListener('click', openDownloadModal);
+}
+if (btnCloseDownloadModal) {
+  btnCloseDownloadModal.addEventListener('click', closeDownloadModal);
+}
+if (btnOpenDownloadFromUser) {
+  btnOpenDownloadFromUser.addEventListener('click', () => {
+    closeUserModal();
+    openDownloadModal();
+  });
+}
+if (downloadModal) {
+  downloadModal.addEventListener('click', (e) => {
+    if (e.target === downloadModal) closeDownloadModal();
+  });
+}
 
 userForm.addEventListener('submit', (e) => {
   e.preventDefault();

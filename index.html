@@ -26,6 +26,9 @@
           <span class="user-icon">👤</span>
           <span id="headerUserName">johnnyhoang</span>
         </button>
+        <button id="btnDownloadModal" class="icon-btn download-icon-btn" type="button" title="Cài đặt trên Android" aria-label="Cài đặt trên Android">
+          🤖
+        </button>
         <button id="btnLangToggle" class="icon-btn lang-btn" type="button" aria-label="Đổi ngôn ngữ">
           EN
         </button>
@@ -173,9 +176,51 @@
         <div id="recentUsersList" class="recent-users-list"></div>
       </div>
       <div class="app-download-section" style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--card-border); text-align: center;">
-        <a id="btnDownloadApk" href="https://github.com/johnnyhoang/smoff/releases/latest/download/Smoff.apk" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 11px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); color: #10b981; font-weight: 700; font-size: 0.85rem; text-decoration: none;">
-          <span id="btnDownloadApkText">🤖 Tải app Android (Smoff.apk)</span>
+        <button id="btnOpenDownloadFromUser" type="button" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 11px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); color: #10b981; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+          <span id="btnDownloadApkText">🤖 Cài đặt app Android (Smoff.apk)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Android Download & Install Modal -->
+  <div id="downloadModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-card" style="max-width: 390px; text-align: left;">
+      <div class="user-modal-header" style="align-items: center; margin-bottom: 14px;">
+        <h2 id="downloadModalTitle" class="modal-title" style="text-align: left; margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+          <span>🤖</span>
+          <span id="downloadModalHeading">Cài đặt trên Android</span>
+        </h2>
+        <button id="btnCloseDownloadModal" class="close-btn" type="button" aria-label="Đóng">&times;</button>
+      </div>
+
+      <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.28); border-radius: 14px; padding: 14px; margin-bottom: 16px; text-align: center;">
+        <div id="apkBadgeSub" style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px; font-weight: 600;">Bản chính thức • Siêu nhẹ ~4.6 MB • 100% Offline</div>
+        <a id="btnDirectDownload" href="/Smoff.apk" download="Smoff.apk" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; border-radius: 12px; background: #10b981; color: #ffffff; font-weight: 800; font-size: 0.95rem; text-decoration: none; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);">
+          📥 <span id="downloadBtnText">Tải file Smoff.apk</span>
         </a>
+        <div style="margin-top: 8px; font-size: 0.72rem; color: var(--text-muted);">
+          <a href="https://github.com/johnnyhoang/smoff/releases/latest/download/Smoff.apk" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">Link tải dự phòng (GitHub)</a>
+        </div>
+      </div>
+
+      <div id="installGuideContainer" style="font-size: 0.82rem; line-height: 1.5; color: var(--text-muted); display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(255, 255, 255, 0.08); color: var(--text-primary); font-weight: 700; flex-shrink: 0; font-size: 0.75rem;">1</span>
+          <div id="step1Text">Bấm nút <strong>Tải file Smoff.apk</strong> ở trên để tải về máy.</div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(255, 255, 255, 0.08); color: var(--text-primary); font-weight: 700; flex-shrink: 0; font-size: 0.75rem;">2</span>
+          <div id="step2Text">Mở thanh thông báo hoặc thư mục <em>Tải về (Downloads)</em>, bấm vào file <strong>Smoff.apk</strong>.</div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(255, 255, 255, 0.08); color: var(--text-primary); font-weight: 700; flex-shrink: 0; font-size: 0.75rem;">3</span>
+          <div id="step3Text">Bấm <strong>Cài đặt</strong> (nếu máy hỏi bảo mật, chọn <em>Bật cho phép từ nguồn này</em>).</div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(255, 255, 255, 0.08); color: var(--text-primary); font-weight: 700; flex-shrink: 0; font-size: 0.75rem;">4</span>
+          <div id="step4Text">Mở app và chọn <strong>Cho phép thông báo</strong> để nhận nhắc nhở đúng giờ!</div>
+        </div>
       </div>
     </div>
   </div>
