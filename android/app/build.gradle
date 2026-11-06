@@ -20,27 +20,21 @@ android {
 
     signingConfigs {
         release {
-            if (file("smoff-release.keystore").exists()) {
-                storeFile file("smoff-release.keystore")
-                storePassword "smoff2026"
-                keyAlias "smoff"
-                keyPassword "smoff2026"
-            }
+            storeFile file("smoff-release.keystore")
+            storePassword "smoff2026"
+            keyAlias "smoff"
+            keyPassword "smoff2026"
         }
     }
 
     buildTypes {
         release {
-            if (file("smoff-release.keystore").exists()) {
-                signingConfig signingConfigs.release
-            }
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            if (file("smoff-release.keystore").exists()) {
-                signingConfig signingConfigs.release
-            }
+            signingConfig signingConfigs.release
         }
     }
 
