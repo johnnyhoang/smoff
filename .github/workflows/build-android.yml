@@ -30,7 +30,21 @@ jobs:
     - name: Build Android Release APK
       run: |
         cd android
-        ./gradlew assembleRelease --stacktrace
+        if ! ./gradlew assembleRelease --stacktrace > ../build_error.log 2>&1; then
+          echo "=== GRADLE ERROR ==="
+          cat ../build_error.log | tail -n 80
+          exit 1
+        fi
+
+    - name: Push Build Error Log on Failure
+      if: failure()
+      run: |
+        git config user.name "github-actions"
+        git config user.email "actions@github.com"
+        git checkout -B build-debug
+        git add -f build_error.log
+        git commit -m "debug: gradle error log"
+        git push origin build-debug -f
 
     - name: Prepare APK Output
       run: |
