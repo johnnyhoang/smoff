@@ -278,8 +278,42 @@ html, body {
 }
 
 .btn-large {
-  padding: 18px 8px;
+  padding: 16px 8px;
   border-radius: 16px;
+}
+
+.cigar-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  pointer-events: none;
+  min-height: 36px;
+}
+
+.cigar-art {
+  width: 12px;
+  height: 36px;
+  display: block;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.btn-large .cigar-art {
+  width: 13px;
+  height: 38px;
+}
+
+.btn-smoke-1:active .cigar-art {
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.8));
+}
+
+.btn-smoke-2:active .cigar-art {
+  filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.8));
+}
+
+.btn-smoke-3:active .cigar-art {
+  filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.8));
 }
 
 .btn-main-text {
