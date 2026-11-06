@@ -47,49 +47,52 @@ function getStorageKey(user = currentUser) {
   return `smoff_state_${user}`;
 }
 
+// Cố định múi giờ Việt Nam (UTC+7, Asia/Ho_Chi_Minh) cho toàn bộ logic tính giờ ngủ, chuỗi thức và ngày lịch sử
+// Khắc phục hoàn toàn lệch giờ giữa Server (Singapore/UTC) và Client (VN/Phone/Laptop)
+const VN_OFFSET_MS = 7 * 60 * 60 * 1000;
+
+function getVNDateParts(ms = Date.now()) {
+  const ts = ms instanceof Date ? ms.getTime() : (Number(ms) || Date.now());
+  const d = new Date(ts + VN_OFFSET_MS);
+  return {
+    year: d.getUTCFullYear(),
+    month: d.getUTCMonth(),
+    date: d.getUTCDate(),
+    hours: d.getUTCHours(),
+    minutes: d.getUTCMinutes(),
+    seconds: d.getUTCSeconds(),
+    day: d.getUTCDay()
+  };
+}
+
 /**
- * Kiểm tra một thời điểm có nằm trong giờ ngủ (23:00 - 07:30) hay không
+ * Kiểm tra một thời điểm có nằm trong giờ ngủ (23:00 - 07:30 theo giờ Việt Nam) hay không
  */
-function isSleepingTime(date = new Date()) {
-  const h = date.getHours();
-  const m = date.getMinutes();
-  if (h === 23) return true; // 23:00 -> 23:59:59
-  if (h < 7 || (h === 7 && m < 30)) return true; // 00:00 -> 07:29:59
+function isSleepingTime(ms = Date.now()) {
+  const { hours, minutes } = getVNDateParts(ms);
+  if (hours === 23) return true; // 23:00 -> 23:59:59 VN
+  if (hours < 7 || (hours === 7 && minutes < 30)) return true; // 00:00 -> 07:29:59 VN
   return false;
 }
 
 /**
- * Tính chính xác thời gian THỨC (đã trừ khung ngủ 23:00 - 07:30 mỗi ngày)
+ * Tính chính xác thời gian THỨC (đã trừ khung ngủ 23:00 - 07:30 mỗi ngày theo giờ Việt Nam)
  */
 function getAwakeDurationMs(startMs, endMs) {
-  if (endMs <= startMs) return 0;
+  if (!startMs || !endMs || endMs <= startMs) return 0;
 
-  const startDate = new Date(startMs);
-  const endDate = new Date(endMs);
+  const startVN = getVNDateParts(startMs);
+  const endVN = getVNDateParts(endMs);
 
-  const cursor = new Date(
-    startDate.getFullYear(),
-    startDate.getMonth(),
-    startDate.getDate(),
-    0, 0, 0, 0
-  );
-
-  const endDayMidnight = new Date(
-    endDate.getFullYear(),
-    endDate.getMonth(),
-    endDate.getDate(),
-    0, 0, 0, 0
-  ).getTime();
+  // Mốc 00:00:00 giờ Việt Nam (quy đổi sang UTC ms chuẩn xác)
+  let curMidnightUTC = Date.UTC(startVN.year, startVN.month, startVN.date, 0, 0, 0) - VN_OFFSET_MS;
+  const endMidnightUTC = Date.UTC(endVN.year, endVN.month, endVN.date, 0, 0, 0) - VN_OFFSET_MS;
 
   let totalAwakeMs = 0;
 
-  while (cursor.getTime() <= endDayMidnight) {
-    const y = cursor.getFullYear();
-    const mo = cursor.getMonth();
-    const d = cursor.getDate();
-
-    const awakeStart = new Date(y, mo, d, 7, 30, 0, 0).getTime();
-    const awakeEnd = new Date(y, mo, d, 23, 0, 0, 0).getTime();
+  while (curMidnightUTC <= endMidnightUTC) {
+    const awakeStart = curMidnightUTC + (7 * 3600 + 30 * 60) * 1000; // 07:30 VN
+    const awakeEnd = curMidnightUTC + 23 * 3600 * 1000;             // 23:00 VN
 
     const overlapStart = Math.max(startMs, awakeStart);
     const overlapEnd = Math.min(endMs, awakeEnd);
@@ -98,18 +101,15 @@ function getAwakeDurationMs(startMs, endMs) {
       totalAwakeMs += overlapEnd - overlapStart;
     }
 
-    cursor.setDate(cursor.getDate() + 1);
+    curMidnightUTC += 24 * 3600 * 1000; // Sang ngày VN tiếp theo
   }
 
   return totalAwakeMs;
 }
 
 function getLocalDateKey(ms = Date.now()) {
-  const d = new Date(ms);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+  const { year, month, date } = getVNDateParts(ms);
+  return `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
 }
 
 function formatHMS(ms) {
@@ -141,8 +141,8 @@ function formatShortDuration(ms) {
 }
 
 function formatTimeHHMM(ms) {
-  const d = new Date(ms);
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const { hours, minutes } = getVNDateParts(ms);
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
 function loadState(user = currentUser) {
@@ -232,6 +232,44 @@ function showToast(msg) {
 }
 
 /**
+ * Hợp nhất thông minh state giữa Local và Cloud:
+ * 1. Ghép danh sách logs theo ID / Timestamp để không bao giờ bị mất điếu hút nào.
+ * 2. Xác định mốc streakStartMs từ lần hút gần nhất trong logs (chống lỗi hiển thị 34 tiếng khi mở thiết bị cũ).
+ */
+function mergeStates(local, cloud) {
+  if (!cloud || typeof cloud.streakStartMs !== 'number') return local;
+  if (!local) return cloud;
+
+  const logMap = new Map();
+  (local.logs || []).forEach((l) => {
+    if (l && l.timestamp) logMap.set(l.id || String(l.timestamp), l);
+  });
+  (cloud.logs || []).forEach((l) => {
+    if (l && l.timestamp) logMap.set(l.id || String(l.timestamp), l);
+  });
+
+  const mergedLogs = Array.from(logMap.values());
+  mergedLogs.sort((a, b) => b.timestamp - a.timestamp);
+
+  let latestStreakStartMs = Math.max(local.streakStartMs || 0, cloud.streakStartMs || 0);
+  if (mergedLogs.length > 0) {
+    // Nếu có nhật ký, chuỗi hiện tại PHẢI bắt đầu từ lần hút gần nhất
+    latestStreakStartMs = mergedLogs[0].timestamp;
+  }
+
+  const latestCheckInMs = Math.max(local.lastCheckInMs || 0, cloud.lastCheckInMs || 0, latestStreakStartMs);
+  const latestUpdatedAt = Math.max(local.updatedAt || 0, cloud.updatedAt || 0);
+
+  return {
+    streakStartMs: latestStreakStartMs,
+    lastCheckInMs: latestCheckInMs,
+    logs: mergedLogs.slice(0, 1000),
+    lastAlertedHourCycle: Math.max(local.lastAlertedHourCycle || 0, cloud.lastAlertedHourCycle || 0),
+    updatedAt: latestUpdatedAt
+  };
+}
+
+/**
  * Đẩy trạng thái của currentUser lên Vercel Blob
  */
 async function pushCloudState() {
@@ -239,7 +277,7 @@ async function pushCloudState() {
   saveLocalState();
 
   try {
-    await fetch('/api/state', {
+    const res = await fetch('/api/state', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -247,11 +285,18 @@ async function pushCloudState() {
         user: currentUser
       })
     });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.state) {
+        state = mergeStates(state, data.state);
+        saveLocalState();
+      }
+    }
   } catch (err) {}
 }
 
 /**
- * Tải trạng thái mới nhất của currentUser từ Vercel Blob
+ * Tải trạng thái mới nhất của currentUser từ Vercel Blob và merge an toàn
  */
 async function pullCloudState() {
   if (isSyncing) return;
@@ -260,33 +305,29 @@ async function pullCloudState() {
     const res = await fetch(`/api/state?user=${encodeURIComponent(currentUser)}&t=${Date.now()}`, {
       cache: 'no-store'
     });
-    if (!res.ok) {
-      isSyncing = false;
-      return;
-    }
+    if (!res.ok) return;
+
     const cloud = await res.json();
     if (cloud && cloud.empty) {
       await pushCloudState();
-      isSyncing = false;
       return;
     }
 
     if (cloud && typeof cloud.streakStartMs === 'number') {
-      const cloudUpdated = Number(cloud.updatedAt) || 0;
-      const localUpdated = Number(state.updatedAt) || 0;
+      const merged = mergeStates(state, cloud);
+      const isStreakChanged = merged.streakStartMs !== state.streakStartMs;
+      const isLogsChanged = merged.logs.length !== state.logs.length;
 
-      if (cloudUpdated > localUpdated) {
-        state = {
-          streakStartMs: cloud.streakStartMs,
-          lastCheckInMs: cloud.lastCheckInMs || cloud.streakStartMs,
-          logs: Array.isArray(cloud.logs) ? cloud.logs : [],
-          lastAlertedHourCycle: Number(cloud.lastAlertedHourCycle) || 0,
-          updatedAt: cloudUpdated
-        };
-        saveLocalState();
+      state = merged;
+      saveLocalState();
+
+      if (isStreakChanged || isLogsChanged) {
         renderLogs();
         updateUI(Date.now());
-      } else if (localUpdated > cloudUpdated) {
+      }
+
+      // Nếu local có logs chưa được lưu trên cloud, đẩy đồng bộ lên
+      if (merged.logs.length > (cloud.logs || []).length || merged.updatedAt > (cloud.updatedAt || 0)) {
         await pushCloudState();
       }
     }
@@ -507,15 +548,11 @@ function closeHourlyModal() {
 
 function calculateIntervalAwakeMs(startMs, endMs, count) {
   let awakeMs = getAwakeDurationMs(startMs, endMs);
-  const startInSleep = isSleepingTime(new Date(startMs));
-  const endInSleep = isSleepingTime(new Date(endMs));
+  const endInSleep = isSleepingTime(endMs);
 
-  // Nếu hút ngoài giờ ngủ (23:00 - 07:30): tính 1 tiếng cho mỗi điếu ngoài giờ
+  // Nếu hút ngoài giờ ngủ (23:00 - 07:30 VN): tính 1 tiếng cho mỗi điếu ngoài giờ vào lịch sử
   if (endInSleep) {
     awakeMs += count * ONE_HOUR_MS;
-  } else if (startInSleep) {
-    // Nếu mốc bắt đầu hút lúc nửa đêm, điếu này hút ban ngày: cộng thêm 1 tiếng thức ngoài giờ
-    awakeMs += ONE_HOUR_MS;
   }
   return awakeMs;
 }
@@ -530,10 +567,7 @@ function handleSmokeButton(count) {
     state.lastCheckInMs = now;
     state.lastAlertedHourCycle = 0;
     closeHourlyModal();
-    let currentAwakeMs = getAwakeDurationMs(state.streakStartMs, now);
-    if (!isSleepingTime(new Date(now)) && isSleepingTime(new Date(state.streakStartMs))) {
-      currentAwakeMs += ONE_HOUR_MS;
-    }
+    const currentAwakeMs = getAwakeDurationMs(state.streakStartMs, now);
     showToast(`Tiếp tục giữ chuỗi: ${formatShortDuration(currentAwakeMs)}`);
     updateUI(now);
     pushCloudState();
@@ -613,8 +647,8 @@ function renderLogs() {
 
       let timeLabel = formatTimeHHMM(item.timestamp);
       if (item.dateKey && item.dateKey !== todayKey) {
-        const d = new Date(item.timestamp);
-        timeLabel = `${d.getDate()}/${d.getMonth() + 1} ${timeLabel}`;
+        const d = getVNDateParts(item.timestamp);
+        timeLabel = `${d.date}/${d.month + 1} ${timeLabel}`;
       }
 
       return `
@@ -631,7 +665,7 @@ function renderLogs() {
 }
 
 function updateUI(now = Date.now()) {
-  const sleeping = isSleepingTime(new Date(now));
+  const sleeping = isSleepingTime(now);
 
   if (sleeping) {
     statusDot.classList.add('sleeping');
@@ -641,10 +675,7 @@ function updateUI(now = Date.now()) {
     sleepBanner.classList.add('hidden');
   }
 
-  let currentAwakeMs = getAwakeDurationMs(state.streakStartMs, now);
-  if (!isSleepingTime(new Date(now)) && isSleepingTime(new Date(state.streakStartMs))) {
-    currentAwakeMs += ONE_HOUR_MS;
-  }
+  const currentAwakeMs = getAwakeDurationMs(state.streakStartMs, now);
   currentStreakTimer.textContent = formatHMS(currentAwakeMs);
 
   const lastLog = state.logs[0];
