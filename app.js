@@ -560,7 +560,7 @@ function renderLogs() {
       }
 
       return `
-        <div class="log-item">
+        <div class="log-item ${isGood ? 'bg-good' : 'bg-bad'}">
           <div class="log-left">
             <span class="log-pill">+${item.count}</span>
             <span class="log-duration ${isGood ? 'good' : 'bad'}">${durationText}</span>
