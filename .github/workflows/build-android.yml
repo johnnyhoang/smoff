@@ -24,35 +24,19 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
 
-    - name: Generate Release Keystore
-      run: |
-        cd android/app
-        keytool -genkey -v -keystore smoff-release.keystore -alias smoff -keyalg RSA -keysize 2048 -validity 10000 -storepass smoff2026 -keypass smoff2026 -dname "CN=Smoff, OU=Apps, O=JohnnyHoang, C=VN"
-
     - name: Grant Execute Permission for Gradlew
       run: chmod +x android/gradlew
 
     - name: Build Android Release APK
       run: |
         cd android
-        ./gradlew assembleRelease --stacktrace --info 2>&1 | tee ../build.log
-
-    - name: Upload Build Log on Failure
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-log
-        path: build.log
+        ./gradlew assembleRelease --stacktrace
 
     - name: Prepare APK Output
       run: |
         mkdir -p release-output
-        APK_PATH=$(find android/app/build/outputs/apk -name "*release*.apk" | head -n 1)
-        if [ -z "$APK_PATH" ]; then
-          APK_PATH=$(find android/app/build/outputs/apk -name "*.apk" | head -n 1)
-        fi
-        echo "Found APK at: $APK_PATH"
-        cp "$APK_PATH" release-output/Smoff.apk
+        find android/app/build/outputs/apk/
+        cp android/app/build/outputs/apk/release/*.apk release-output/Smoff.apk
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4

@@ -18,23 +18,14 @@ android {
         vectorDrawables.useSupportLibrary = true
     }
 
-    signingConfigs {
-        release {
-            storeFile file("smoff-release.keystore")
-            storePassword "smoff2026"
-            keyAlias "smoff"
-            keyPassword "smoff2026"
-        }
-    }
-
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.debug
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.debug
         }
     }
 
