@@ -26,21 +26,21 @@
           <span class="user-icon">👤</span>
           <span id="headerUserName">johnnyhoang</span>
         </button>
-        <button id="btnTestPopup" class="icon-btn" type="button" title="Xem thử popup 1h">
-          ⚡ Test nhắc
+        <button id="btnLangToggle" class="icon-btn lang-btn" type="button" aria-label="Đổi ngôn ngữ">
+          EN
         </button>
       </div>
     </header>
 
     <!-- Sleep Mode Indicator -->
     <div id="sleepBanner" class="sleep-banner hidden">
-      <span>🌙 Giờ ngủ (23:00–07:30)</span>
-      <strong>Tạm dừng</strong>
+      <span id="sleepBannerTitle">🌙 Giờ ngủ (23:00–07:30)</span>
+      <strong id="sleepBannerStatus">Tạm dừng</strong>
     </div>
 
     <!-- Main Streak Hero -->
     <section class="hero-card">
-      <div class="hero-label">Đã nhịn</div>
+      <div id="heroLabel" class="hero-label">Đã nhịn</div>
       <div id="currentStreakTimer" class="hero-timer">00:00:00</div>
       <div class="hero-sub">
         <span id="liveRecordBadge" class="badge-record hidden">🔥 Kỷ lục mới!</span>
@@ -50,16 +50,16 @@
     <!-- Key Metrics Grid -->
     <section class="stats-grid">
       <div class="stat-card">
-        <span class="stat-title">Nhịn dai nhất</span>
+        <span id="statTitleRecord" class="stat-title">Nhịn dai nhất</span>
         <span id="pastRecordValue" class="stat-value highlight-record">0h 00p</span>
       </div>
       <div class="stat-card">
-        <span class="stat-title">Nhịn trung bình</span>
+        <span id="statTitleAvg" class="stat-title">Nhịn trung bình</span>
         <span id="monthlyAvgValue" class="stat-value highlight-avg">0h 00p</span>
         <span id="monthlyAvgSub" class="stat-sub">TB: 0/ngày</span>
       </div>
       <div class="stat-card">
-        <span class="stat-title">Hút hôm nay</span>
+        <span id="statTitleToday" class="stat-title">Hút hôm nay</span>
         <span id="todayCountValue" class="stat-value highlight-today">0</span>
         <span id="todayCountSub" class="stat-sub">0 điếu</span>
       </div>
@@ -92,7 +92,7 @@
     <!-- History & Undo -->
     <section class="history-card">
       <div class="history-header">
-        <span class="history-title">Lịch sử</span>
+        <span id="historyTitle" class="history-title">Lịch sử</span>
         <button id="btnUndo" class="text-btn hidden" type="button">↩ Hoàn tác</button>
       </div>
       <div id="logList" class="log-list">
@@ -104,23 +104,23 @@
   <!-- 1-Hour Popup Modal -->
   <div id="hourlyModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
     <div class="modal-card">
-      <h2 class="modal-title">1 tiếng vừa qua</h2>
+      <h2 id="modalTitle" class="modal-title">1 tiếng vừa qua</h2>
 
       <div class="modal-stats">
         <div class="modal-stat-row">
-          <span class="modal-stat-label">Đã nhịn</span>
+          <span id="modalLabelStreak" class="modal-stat-label">Đã nhịn</span>
           <span id="modalCurrentStreak" class="modal-stat-val" style="color:#ffffff;">0h 00p</span>
         </div>
         <div class="modal-stat-row">
-          <span class="modal-stat-label">Nhịn dai nhất</span>
+          <span id="modalLabelRecord" class="modal-stat-label">Nhịn dai nhất</span>
           <span id="modalPastRecord" class="modal-stat-val" style="color:#34d399;">0h 00p</span>
         </div>
         <div class="modal-stat-row">
-          <span class="modal-stat-label">Nhịn trung bình</span>
+          <span id="modalLabelAvg" class="modal-stat-label">Nhịn trung bình</span>
           <span id="modalMonthlyAvg" class="modal-stat-val" style="color:#38bdf8;">0h 00p</span>
         </div>
         <div class="modal-stat-row">
-          <span class="modal-stat-label">Hút hôm nay</span>
+          <span id="modalLabelToday" class="modal-stat-label">Hút hôm nay</span>
           <span id="modalTodayCount" class="modal-stat-val" style="color:#fbbf24;">0 điếu</span>
         </div>
       </div>
@@ -147,7 +147,7 @@
       </div>
 
       <button class="btn btn-no-smoke" data-smoke="0" type="button">
-        <span>Chưa hút</span>
+        <span id="btnNoSmokeText">Chưa hút</span>
       </button>
     </div>
   </div>
@@ -156,17 +156,17 @@
   <div id="userModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
     <div class="modal-card">
       <div class="user-modal-header">
-        <h2 class="modal-title" style="text-align:left;">Người theo dõi</h2>
+        <h2 id="userModalTitle" class="modal-title" style="text-align:left;">Người theo dõi</h2>
         <button id="btnCloseUserModal" class="close-btn" type="button" aria-label="Đóng">&times;</button>
       </div>
       <form id="userForm" class="user-form">
         <div class="user-input-row">
           <input id="userNameInput" class="user-input" type="text" placeholder="Tên theo dõi (vd: johnnyhoang, nga...)" maxlength="30" required autocomplete="off" />
-          <button class="btn-save-user" type="submit">Lưu</button>
+          <button id="btnSaveUser" class="btn-save-user" type="submit">Lưu</button>
         </div>
       </form>
       <div id="recentUsersSection" class="recent-users-section hidden">
-        <span class="recent-users-title">Người tham gia:</span>
+        <span id="recentUsersTitle" class="recent-users-title">Người tham gia:</span>
         <div id="recentUsersList" class="recent-users-list"></div>
       </div>
     </div>

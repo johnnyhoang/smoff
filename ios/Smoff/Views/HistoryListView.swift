@@ -9,11 +9,12 @@ struct HistoryListView: View {
         let todayKey = TimeService.getLocalDateKey()
         let cutoff30d = Date().timeIntervalSince1970 * 1000 - TimeService.thirtyDaysMs
         let monthlyLogs = store.logs.filter { $0.timestamp >= cutoff30d }
+        let en = store.isEnglish
 
         VStack(alignment: .leading, spacing: 12) {
             // Header
             HStack {
-                Text("Lịch sử")
+                Text(en ? "History" : "Lịch sử")
                     .font(.system(size: 13, weight: .bold, design: .rounded))
                     .foregroundColor(SmoffTheme.textMuted)
 
@@ -23,7 +24,7 @@ struct HistoryListView: View {
                     Button(action: {
                         store.undo()
                     }) {
-                        Text("↩ Hoàn tác")
+                        Text(en ? "↩ Undo" : "↩ Hoàn tác")
                             .font(.system(size: 12, weight: .semibold, design: .rounded))
                             .foregroundColor(SmoffTheme.sky)
                     }
@@ -32,7 +33,7 @@ struct HistoryListView: View {
             .padding(.horizontal, 4)
 
             if monthlyLogs.isEmpty {
-                Text("Chưa có lần hút nào")
+                Text(en ? "No logs yet" : "Chưa có lần hút nào")
                     .font(.system(size: 13, weight: .regular, design: .rounded))
                     .foregroundColor(SmoffTheme.textMuted.opacity(0.7))
                     .frame(maxWidth: .infinity)
@@ -40,7 +41,7 @@ struct HistoryListView: View {
             } else {
                 LazyVStack(spacing: 8) {
                     ForEach(monthlyLogs) { item in
-                        HistoryRow(item: item, threshold: threshold, todayKey: todayKey)
+                        HistoryRow(item: item, threshold: threshold, todayKey: todayKey, isEnglish: en)
                     }
                 }
             }
@@ -59,16 +60,18 @@ private struct HistoryRow: View {
     let item: SmokeLog
     let threshold: Double
     let todayKey: String
+    let isEnglish: Bool
 
     var isGood: Bool {
         item.eachIntervalMs >= threshold
     }
 
     var durationText: String {
+        let perUnit = isEnglish ? "/cig" : "/điếu"
         if item.count > 1 {
-            return "\(TimeService.formatShortDuration(ms: item.eachIntervalMs))/điếu × \(item.count)"
+            return "\(TimeService.formatShortDuration(ms: item.eachIntervalMs, isEnglish: isEnglish))\(perUnit) × \(item.count)"
         } else {
-            return TimeService.formatShortDuration(ms: item.eachIntervalMs)
+            return TimeService.formatShortDuration(ms: item.eachIntervalMs, isEnglish: isEnglish)
         }
     }
 

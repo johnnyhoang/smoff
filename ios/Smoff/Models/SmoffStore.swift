@@ -9,16 +9,19 @@ final class SmoffStore: ObservableObject {
     @Published var lastAlertedHourCycle: Int
     @Published var showHourlySheet: Bool = false
     @Published var isNewRecord: Bool = false
+    @Published var isEnglish: Bool
 
     // Timer state
     @Published var currentAwakeMs: Double = 0
     @Published var isSleeping: Bool = false
 
     private let storageKey = "smoff_offline_state_v1"
+    private let langKey = "smoff_is_english"
     private var timerSubscription: AnyCancellable?
     private var snoozeTimerSubscription: AnyCancellable?
 
     init() {
+        self.isEnglish = UserDefaults.standard.bool(forKey: "smoff_is_english")
         let now = Date().timeIntervalSince1970 * 1000
         if let data = UserDefaults.standard.data(forKey: storageKey),
            let saved = try? JSONDecoder().decode(SavedState.self, from: data) {
@@ -65,15 +68,21 @@ final class SmoffStore: ObservableObject {
         }
     }
 
+    func toggleLanguage() {
+        isEnglish.toggle()
+        UserDefaults.standard.set(isEnglish, forKey: langKey)
+    }
+
     func openHourlyPrompt() {
         showHourlySheet = true
         SoundManager.shared.playChime()
-        NotificationManager.shared.scheduleFiveMinuteReminder()
+        NotificationManager.shared.scheduleFiveMinuteReminder(isEnglish: isEnglish)
 
         let metrics = computeMetrics()
         NotificationManager.shared.sendHourlyNotification(
-            awakeDurationText: TimeService.formatShortDuration(ms: currentAwakeMs),
-            recordText: TimeService.formatShortDuration(ms: metrics.pastRecordMs)
+            awakeDurationText: TimeService.formatShortDuration(ms: currentAwakeMs, isEnglish: isEnglish),
+            recordText: TimeService.formatShortDuration(ms: metrics.pastRecordMs, isEnglish: isEnglish),
+            isEnglish: isEnglish
         )
 
         // Sau 5 phút nếu chưa đóng sheet thì lại ting ting tiếp
@@ -83,7 +92,7 @@ final class SmoffStore: ObservableObject {
             .sink { [weak self] _ in
                 guard let self = self, self.showHourlySheet else { return }
                 SoundManager.shared.playChime()
-                NotificationManager.shared.scheduleFiveMinuteReminder()
+                NotificationManager.shared.scheduleFiveMinuteReminder(isEnglish: self.isEnglish)
             }
     }
 

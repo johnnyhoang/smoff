@@ -71,20 +71,24 @@ struct TimeService {
         return String(format: "%02d:%02d:%02d", h, m, s)
     }
 
-    static func formatShortDuration(ms: Double) -> String {
-        guard ms > 0 else { return "0p" }
+    static func formatShortDuration(ms: Double, isEnglish: Bool = false) -> String {
+        guard ms > 0 else { return isEnglish ? "0m" : "0p" }
         let totalSec = Int((ms / 1000).rounded())
         let h = totalSec / 3600
         let m = (totalSec % 3600) / 60
         let s = totalSec % 60
 
+        let mUnit = isEnglish ? "m" : "p"
+        let hUnit = "h"
+        let sUnit = "s"
+
         if h > 0 {
-            return String(format: "%dh %02dp", h, m)
+            return String(format: "%d%@ %02d%@", h, hUnit, m, mUnit)
         }
         if m > 0 {
-            return (s > 0 && m < 10) ? "\(m)p \(s)s" : "\(m)p"
+            return (s > 0 && m < 10) ? "\(m)\(mUnit) \(s)\(sUnit)" : "\(m)\(mUnit)"
         }
-        return "\(s)s"
+        return "\(s)\(sUnit)"
     }
 
     static func formatTimeHHMM(date: Date, calendar: Calendar = .current) -> String {

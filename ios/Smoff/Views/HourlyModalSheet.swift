@@ -5,10 +5,11 @@ struct HourlyModalSheet: View {
 
     var body: some View {
         let metrics = store.computeMetrics()
+        let en = store.isEnglish
 
         VStack(spacing: 18) {
             // Header
-            Text("1 tiếng vừa qua")
+            Text(en ? "Past 1 hour" : "1 tiếng vừa qua")
                 .font(.system(size: 20, weight: .heavy, design: .rounded))
                 .foregroundColor(SmoffTheme.textPrimary)
                 .padding(.top, 8)
@@ -16,26 +17,30 @@ struct HourlyModalSheet: View {
             // Stats recap
             VStack(spacing: 10) {
                 StatRow(
-                    label: "Đã nhịn",
-                    value: TimeService.formatShortDuration(ms: store.currentAwakeMs),
+                    label: en ? "Clean streak" : "Đã nhịn",
+                    value: TimeService.formatShortDuration(ms: store.currentAwakeMs, isEnglish: en),
                     color: SmoffTheme.textPrimary
                 )
 
                 StatRow(
-                    label: "Nhịn dai nhất",
-                    value: TimeService.formatShortDuration(ms: metrics.pastRecordMs),
+                    label: en ? "Best streak" : "Nhịn dai nhất",
+                    value: TimeService.formatShortDuration(ms: metrics.pastRecordMs, isEnglish: en),
                     color: SmoffTheme.emerald
                 )
 
                 StatRow(
-                    label: "Nhịn trung bình",
-                    value: "\(TimeService.formatShortDuration(ms: metrics.monthlyAvgMs)) (TB: \(metrics.dailyAvgCigs)/ngày)",
+                    label: en ? "Average streak" : "Nhịn trung bình",
+                    value: en
+                        ? "\(TimeService.formatShortDuration(ms: metrics.monthlyAvgMs, isEnglish: true)) (Avg: \(metrics.dailyAvgCigs)/day)"
+                        : "\(TimeService.formatShortDuration(ms: metrics.monthlyAvgMs, isEnglish: false)) (TB: \(metrics.dailyAvgCigs)/ngày)",
                     color: SmoffTheme.sky
                 )
 
                 StatRow(
-                    label: "Hút hôm nay",
-                    value: "\(metrics.todayCigs) điếu (\(metrics.sumCigs30d) điếu từ \(metrics.startDateStr))",
+                    label: en ? "Smoked today" : "Hút hôm nay",
+                    value: en
+                        ? "\(metrics.todayCigs) cigs (\(metrics.sumCigs30d) cigs since \(metrics.startDateStr))"
+                        : "\(metrics.todayCigs) điếu (\(metrics.sumCigs30d) điếu từ \(metrics.startDateStr))",
                     color: SmoffTheme.amber
                 )
             }
@@ -54,7 +59,7 @@ struct HourlyModalSheet: View {
             Button(action: {
                 store.recordSmoke(count: 0)
             }) {
-                Text("Chưa hút")
+                Text(en ? "Haven't smoked" : "Chưa hút")
                     .font(.system(size: 16, weight: .heavy, design: .rounded))
                     .foregroundColor(Color(hex: "06281E"))
                     .frame(maxWidth: .infinity)

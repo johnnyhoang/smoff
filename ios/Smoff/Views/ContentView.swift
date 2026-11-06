@@ -29,15 +29,18 @@ struct ContentView: View {
                         Spacer()
 
                         Button(action: {
-                            store.openHourlyPrompt()
+                            store.toggleLanguage()
                         }) {
-                            Text("Test nhắc")
-                                .font(.system(size: 12, weight: .medium, design: .rounded))
-                                .foregroundColor(SmoffTheme.textMuted)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(Color.white.opacity(0.06))
+                            Text(store.isEnglish ? "VI" : "EN")
+                                .font(.system(size: 12, weight: .bold, design: .rounded))
+                                .foregroundColor(SmoffTheme.textPrimary)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.white.opacity(0.08))
                                 .clipShape(Capsule())
+                                .overlay(
+                                    Capsule().stroke(Color.white.opacity(0.14), lineWidth: 1)
+                                )
                         }
                     }
                     .padding(.horizontal, 4)
@@ -46,13 +49,13 @@ struct ContentView: View {
                     // Sleep Banner
                     if store.isSleeping {
                         HStack {
-                            Text("🌙 Giờ ngủ (23:00–07:30)")
+                            Text(store.isEnglish ? "🌙 Sleep hours (23:00–07:30)" : "🌙 Giờ ngủ (23:00–07:30)")
                                 .font(.system(size: 12, weight: .medium, design: .rounded))
                                 .foregroundColor(SmoffTheme.sleepPurple)
 
                             Spacer()
 
-                            Text("Tạm dừng")
+                            Text(store.isEnglish ? "Paused" : "Tạm dừng")
                                 .font(.system(size: 12, weight: .bold, design: .rounded))
                                 .foregroundColor(SmoffTheme.sleepPurple)
                         }

@@ -5,30 +5,31 @@ struct StatsGridView: View {
 
     var body: some View {
         let metrics = store.computeMetrics()
+        let en = store.isEnglish
 
         HStack(spacing: 8) {
             // Cột 1: Nhịn dai nhất
             StatCard(
-                title: "Nhịn dai nhất",
-                value: TimeService.formatShortDuration(ms: metrics.pastRecordMs),
+                title: en ? "Best streak" : "Nhịn dai nhất",
+                value: TimeService.formatShortDuration(ms: metrics.pastRecordMs, isEnglish: en),
                 valueColor: SmoffTheme.emerald,
                 subtext: nil
             )
 
             // Cột 2: Nhịn trung bình
             StatCard(
-                title: "Nhịn trung bình",
-                value: TimeService.formatShortDuration(ms: metrics.monthlyAvgMs),
+                title: en ? "Average streak" : "Nhịn trung bình",
+                value: TimeService.formatShortDuration(ms: metrics.monthlyAvgMs, isEnglish: en),
                 valueColor: SmoffTheme.sky,
-                subtext: "TB: \(metrics.dailyAvgCigs) điếu/ngày"
+                subtext: en ? "Avg: \(metrics.dailyAvgCigs) cigs/day" : "TB: \(metrics.dailyAvgCigs) điếu/ngày"
             )
 
             // Cột 3: Hút hôm nay
             StatCard(
-                title: "Hút hôm nay",
+                title: en ? "Smoked today" : "Hút hôm nay",
                 value: "\(metrics.todayCigs)",
                 valueColor: SmoffTheme.amber,
-                subtext: "\(metrics.sumCigs30d) điếu từ \(metrics.startDateStr)"
+                subtext: en ? "\(metrics.sumCigs30d) cigs since \(metrics.startDateStr)" : "\(metrics.sumCigs30d) điếu từ \(metrics.startDateStr)"
             )
         }
     }

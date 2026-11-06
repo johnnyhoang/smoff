@@ -19,10 +19,15 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     }
 
     /// Gửi thông báo 1 tiếng nhắc nhở
-    func sendHourlyNotification(awakeDurationText: String, recordText: String) {
+    func sendHourlyNotification(awakeDurationText: String, recordText: String, isEnglish: Bool = false) {
         let content = UNMutableNotificationContent()
-        content.title = "⏰ Đã duy trì \(awakeDurationText) không hút!"
-        content.body = "Kỷ lục: \(recordText). Hãy tiếp tục giữ chuỗi sạch nhé!"
+        if isEnglish {
+            content.title = "⏰ Kept clean for \(awakeDurationText)!"
+            content.body = "Best: \(recordText). Keep the clean streak going!"
+        } else {
+            content.title = "⏰ Đã duy trì \(awakeDurationText) không hút!"
+            content.body = "Kỷ lục: \(recordText). Hãy tiếp tục giữ chuỗi sạch nhé!"
+        }
         content.sound = .default
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
@@ -36,12 +41,17 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     }
 
     /// Lên lịch nhắc lại sau 5 phút nếu người dùng chưa tương tác với popup
-    func scheduleFiveMinuteReminder() {
+    func scheduleFiveMinuteReminder(isEnglish: Bool = false) {
         cancelFiveMinuteReminder()
 
         let content = UNMutableNotificationContent()
-        content.title = "⏰ 1 tiếng vừa qua bạn có hút không?"
-        content.body = "Mở app và ghi nhận nhanh nhé!"
+        if isEnglish {
+            content.title = "⏰ Did you smoke in the past hour?"
+            content.body = "Open the app and check in quickly!"
+        } else {
+            content.title = "⏰ 1 tiếng vừa qua bạn có hút không?"
+            content.body = "Mở app và ghi nhận nhanh nhé!"
+        }
         content.sound = .default
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5 * 60, repeats: false)

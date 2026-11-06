@@ -4,8 +4,92 @@
 
 const ACTIVE_USER_KEY = 'smoff_active_user';
 const RECENT_USERS_KEY = 'smoff_recent_users';
+const LANG_KEY = 'smoff_lang';
 const ONE_HOUR_MS = 60 * 60 * 1000;
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+let currentLang = localStorage.getItem(LANG_KEY) || 'vi';
+
+const I18N = {
+  vi: {
+    langBtn: 'EN',
+    langAria: 'Chuyển sang tiếng Anh',
+    sleepTitle: '🌙 Giờ ngủ (23:00–07:30)',
+    sleepStatus: 'Tạm dừng',
+    heroLabel: 'Đã nhịn',
+    newRecordBadge: '🔥 Kỷ lục mới!',
+    statRecord: 'Nhịn dai nhất',
+    statAvg: 'Nhịn trung bình',
+    statToday: 'Hút hôm nay',
+    dailyAvgSub: (avg) => `TB: ${avg} điếu/ngày`,
+    todaySub: (count, date) => `${count} điếu từ ${date}`,
+    historyTitle: 'Lịch sử',
+    undoBtn: '↩ Hoàn tác',
+    emptyLog: 'Chưa có lần hút nào',
+    cigsUnit: 'điếu',
+    cigUnitSingle: 'điếu',
+    perCig: '/điếu',
+    modalTitle: '1 tiếng vừa qua',
+    modalStreak: 'Đã nhịn',
+    modalRecord: 'Nhịn dai nhất',
+    modalAvg: 'Nhịn trung bình',
+    modalToday: 'Hút hôm nay',
+    modalNotSmoked: 'Chưa hút',
+    userModalTitle: 'Người theo dõi',
+    userNamePlaceholder: 'Tên theo dõi (vd: johnnyhoang, nga...)',
+    saveBtn: 'Lưu',
+    recentUsersTitle: 'Người tham gia:',
+    toastUserSwitch: (u) => `Đã chuyển sang: ${u}`,
+    toastKeepStreak: (d) => `Tiếp tục giữ chuỗi: ${d}`,
+    toastSmokeSingle: (d) => `+1 điếu (${d})`,
+    toastSmokeMulti: (c, d) => `+${c} điếu (${d}/điếu)`,
+    toastUndo: '↩ Đã hoàn tác',
+    notifTitle: (u, d) => `⏰ [${u}] Đã duy trì ${d} không hút!`,
+    notifBody: (rec, avg, today) => `Kỷ lục: ${rec} • TB: ${avg} • Hôm nay: ${today} điếu.`,
+    hUnit: 'h',
+    mUnit: 'p',
+    sUnit: 's'
+  },
+  en: {
+    langBtn: 'VI',
+    langAria: 'Switch to Vietnamese',
+    sleepTitle: '🌙 Sleep hours (23:00–07:30)',
+    sleepStatus: 'Paused',
+    heroLabel: 'Clean streak',
+    newRecordBadge: '🔥 New record!',
+    statRecord: 'Best streak',
+    statAvg: 'Average streak',
+    statToday: 'Smoked today',
+    dailyAvgSub: (avg) => `Avg: ${avg} cigs/day`,
+    todaySub: (count, date) => `${count} cigs since ${date}`,
+    historyTitle: 'History',
+    undoBtn: '↩ Undo',
+    emptyLog: 'No logs yet',
+    cigsUnit: 'cigs',
+    cigUnitSingle: 'cig',
+    perCig: '/cig',
+    modalTitle: 'Past 1 hour',
+    modalStreak: 'Clean streak',
+    modalRecord: 'Best streak',
+    modalAvg: 'Average streak',
+    modalToday: 'Smoked today',
+    modalNotSmoked: "Haven't smoked",
+    userModalTitle: 'Active Tracker',
+    userNamePlaceholder: 'User name (e.g. johnnyhoang, nga...)',
+    saveBtn: 'Save',
+    recentUsersTitle: 'Trackers:',
+    toastUserSwitch: (u) => `Switched to: ${u}`,
+    toastKeepStreak: (d) => `Keep going: ${d}`,
+    toastSmokeSingle: (d) => `+1 cigarette (${d})`,
+    toastSmokeMulti: (c, d) => `+${c} cigarettes (${d}/cig)`,
+    toastUndo: '↩ Undone',
+    notifTitle: (u, d) => `⏰ [${u}] Kept clean for ${d}!`,
+    notifBody: (rec, avg, today) => `Best: ${rec} • Avg: ${avg} • Today: ${today} cigs.`,
+    hUnit: 'h',
+    mUnit: 'm',
+    sUnit: 's'
+  }
+};
 
 function normalizeUser(raw) {
   if (!raw || typeof raw !== 'string') return 'johnnyhoang';
@@ -125,19 +209,20 @@ function formatHMS(ms) {
 }
 
 function formatShortDuration(ms) {
-  if (!ms || ms <= 0) return '0p';
+  const t = I18N[currentLang] || I18N.vi;
+  if (!ms || ms <= 0) return `0${t.mUnit}`;
   const totalSec = Math.round(ms / 1000);
   const h = Math.floor(totalSec / 3600);
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;
 
   if (h > 0) {
-    return `${h}h ${String(m).padStart(2, '0')}p`;
+    return `${h}${t.hUnit} ${String(m).padStart(2, '0')}${t.mUnit}`;
   }
   if (m > 0) {
-    return s > 0 && m < 10 ? `${m}p ${s}s` : `${m}p`;
+    return s > 0 && m < 10 ? `${m}${t.mUnit} ${s}${t.sUnit}` : `${m}${t.mUnit}`;
   }
-  return `${s}s`;
+  return `${s}${t.sUnit}`;
 }
 
 function formatTimeHHMM(ms) {
@@ -190,37 +275,88 @@ let isSyncing = false;
 // DOM Elements
 const statusDot = document.getElementById('statusDot');
 const headerUserName = document.getElementById('headerUserName');
+const btnLangToggle = document.getElementById('btnLangToggle');
 const btnUserModal = document.getElementById('btnUserModal');
 const userModal = document.getElementById('userModal');
+const userModalTitle = document.getElementById('userModalTitle');
 const btnCloseUserModal = document.getElementById('btnCloseUserModal');
 const userForm = document.getElementById('userForm');
 const userNameInput = document.getElementById('userNameInput');
+const btnSaveUser = document.getElementById('btnSaveUser');
 const recentUsersSection = document.getElementById('recentUsersSection');
+const recentUsersTitle = document.getElementById('recentUsersTitle');
 const recentUsersList = document.getElementById('recentUsersList');
 
 const sleepBanner = document.getElementById('sleepBanner');
+const sleepBannerTitle = document.getElementById('sleepBannerTitle');
+const sleepBannerStatus = document.getElementById('sleepBannerStatus');
+const heroLabel = document.getElementById('heroLabel');
 const currentStreakTimer = document.getElementById('currentStreakTimer');
 const lastSmokeLabel = document.getElementById('lastSmokeLabel');
 const liveRecordBadge = document.getElementById('liveRecordBadge');
 
+const statTitleRecord = document.getElementById('statTitleRecord');
 const pastRecordValue = document.getElementById('pastRecordValue');
+const statTitleAvg = document.getElementById('statTitleAvg');
 const monthlyAvgValue = document.getElementById('monthlyAvgValue');
 const monthlyAvgSub = document.getElementById('monthlyAvgSub');
+const statTitleToday = document.getElementById('statTitleToday');
 const todayCountValue = document.getElementById('todayCountValue');
 const todayCountSub = document.getElementById('todayCountSub');
 
+const historyTitle = document.getElementById('historyTitle');
 const logList = document.getElementById('logList');
 const btnUndo = document.getElementById('btnUndo');
-const btnTestPopup = document.getElementById('btnTestPopup');
 
 const hourlyModal = document.getElementById('hourlyModal');
+const modalTitle = document.getElementById('modalTitle');
+const modalLabelStreak = document.getElementById('modalLabelStreak');
 const modalCurrentStreak = document.getElementById('modalCurrentStreak');
+const modalLabelRecord = document.getElementById('modalLabelRecord');
 const modalPastRecord = document.getElementById('modalPastRecord');
+const modalLabelAvg = document.getElementById('modalLabelAvg');
 const modalMonthlyAvg = document.getElementById('modalMonthlyAvg');
+const modalLabelToday = document.getElementById('modalLabelToday');
 const modalTodayCount = document.getElementById('modalTodayCount');
+const btnNoSmokeText = document.getElementById('btnNoSmokeText');
 
 const toastEl = document.getElementById('toast');
 let toastTimeout = null;
+
+function applyLanguage() {
+  const t = I18N[currentLang] || I18N.vi;
+  if (btnLangToggle) {
+    btnLangToggle.textContent = t.langBtn;
+    btnLangToggle.setAttribute('aria-label', t.langAria);
+  }
+  if (sleepBannerTitle) sleepBannerTitle.textContent = t.sleepTitle;
+  if (sleepBannerStatus) sleepBannerStatus.textContent = t.sleepStatus;
+  if (heroLabel) heroLabel.textContent = t.heroLabel;
+  if (liveRecordBadge) liveRecordBadge.textContent = t.newRecordBadge;
+  if (statTitleRecord) statTitleRecord.textContent = t.statRecord;
+  if (statTitleAvg) statTitleAvg.textContent = t.statAvg;
+  if (statTitleToday) statTitleToday.textContent = t.statToday;
+  if (historyTitle) historyTitle.textContent = t.historyTitle;
+  if (btnUndo) btnUndo.textContent = t.undoBtn;
+  if (modalTitle) modalTitle.textContent = t.modalTitle;
+  if (modalLabelStreak) modalLabelStreak.textContent = t.modalStreak;
+  if (modalLabelRecord) modalLabelRecord.textContent = t.modalRecord;
+  if (modalLabelAvg) modalLabelAvg.textContent = t.modalAvg;
+  if (modalLabelToday) modalLabelToday.textContent = t.modalToday;
+  if (btnNoSmokeText) btnNoSmokeText.textContent = t.modalNotSmoked;
+  if (userModalTitle) userModalTitle.textContent = t.userModalTitle;
+  if (userNameInput) userNameInput.placeholder = t.userNamePlaceholder;
+  if (btnSaveUser) btnSaveUser.textContent = t.saveBtn;
+  if (recentUsersTitle) recentUsersTitle.textContent = t.recentUsersTitle;
+}
+
+function toggleLanguage() {
+  currentLang = currentLang === 'vi' ? 'en' : 'vi';
+  localStorage.setItem(LANG_KEY, currentLang);
+  applyLanguage();
+  renderLogs();
+  updateUI(Date.now());
+}
 
 function showToast(msg) {
   toastEl.textContent = msg;
@@ -348,7 +484,8 @@ function switchUser(newUser) {
   renderLogs();
   updateUI(Date.now());
   closeUserModal();
-  showToast(`Đã chuyển sang: ${clean}`);
+  const t = I18N[currentLang] || I18N.vi;
+  showToast(t.toastUserSwitch(clean));
   pullCloudState();
 }
 
@@ -489,8 +626,9 @@ function playHourlyAlertSound() {
 function sendHourlyNotification(currentAwakeMs, metrics) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
 
-  const title = `⏰ [${currentUser}] Đã duy trì ${formatShortDuration(currentAwakeMs)} không hút!`;
-  const body = `Kỷ lục: ${formatShortDuration(metrics.pastRecordMs)} • TB: ${formatShortDuration(metrics.monthlyAvgMs)} • Hôm nay: ${metrics.todayCigs} điếu.`;
+  const t = I18N[currentLang] || I18N.vi;
+  const title = t.notifTitle(currentUser, formatShortDuration(currentAwakeMs));
+  const body = t.notifBody(formatShortDuration(metrics.pastRecordMs), formatShortDuration(metrics.monthlyAvgMs), metrics.todayCigs);
 
   if (navigator.serviceWorker && navigator.serviceWorker.controller) {
     navigator.serviceWorker.ready.then((reg) => {
@@ -527,7 +665,7 @@ function openHourlyModal() {
       playHourlyAlertSound();
       const now = Date.now();
       let awakeMs = getAwakeDurationMs(state.streakStartMs, now);
-      const metrics = calculateMetrics(now);
+      const metrics = computeMetrics(now);
       sendHourlyNotification(awakeMs, metrics);
     } else {
       if (modalRepeatTimer) {
@@ -562,13 +700,14 @@ function calculateIntervalAwakeMs(startMs, endMs, count) {
  */
 function handleSmokeButton(count) {
   const now = Date.now();
+  const t = I18N[currentLang] || I18N.vi;
 
   if (count === 0) {
     state.lastCheckInMs = now;
     state.lastAlertedHourCycle = 0;
     closeHourlyModal();
     const currentAwakeMs = getAwakeDurationMs(state.streakStartMs, now);
-    showToast(`Tiếp tục giữ chuỗi: ${formatShortDuration(currentAwakeMs)}`);
+    showToast(t.toastKeepStreak(formatShortDuration(currentAwakeMs)));
     updateUI(now);
     pushCloudState();
     return;
@@ -599,9 +738,9 @@ function handleSmokeButton(count) {
   pushCloudState();
 
   if (count === 1) {
-    showToast(`+1 điếu (${formatShortDuration(eachIntervalMs)})`);
+    showToast(t.toastSmokeSingle(formatShortDuration(eachIntervalMs)));
   } else {
-    showToast(`+${count} điếu (${formatShortDuration(eachIntervalMs)}/điếu)`);
+    showToast(t.toastSmokeMulti(count, formatShortDuration(eachIntervalMs)));
   }
 }
 
@@ -616,12 +755,14 @@ function handleUndo() {
   renderLogs();
   updateUI(Date.now());
   pushCloudState();
-  showToast('↩ Đã hoàn tác');
+  const t = I18N[currentLang] || I18N.vi;
+  showToast(t.toastUndo);
 }
 
 function renderLogs() {
   const cutoff30d = Date.now() - THIRTY_DAYS_MS;
   const monthlyLogs = state.logs.filter((l) => l.timestamp >= cutoff30d);
+  const t = I18N[currentLang] || I18N.vi;
 
   if (state.logs.length > 0) {
     btnUndo.classList.remove('hidden');
@@ -630,7 +771,7 @@ function renderLogs() {
   }
 
   if (monthlyLogs.length === 0) {
-    logList.innerHTML = `<div class="empty-log">Chưa có lần hút nào</div>`;
+    logList.innerHTML = `<div class="empty-log">${t.emptyLog}</div>`;
     return;
   }
 
@@ -642,7 +783,7 @@ function renderLogs() {
     .map((item) => {
       const isGood = item.eachIntervalMs >= thresholdMs;
       const durationText = item.count > 1
-        ? `${formatShortDuration(item.eachIntervalMs)}/điếu × ${item.count}`
+        ? `${formatShortDuration(item.eachIntervalMs)}${t.perCig} × ${item.count}`
         : `${formatShortDuration(item.eachIntervalMs)}`;
 
       let timeLabel = formatTimeHHMM(item.timestamp);
@@ -665,6 +806,7 @@ function renderLogs() {
 }
 
 function updateUI(now = Date.now()) {
+  const t = I18N[currentLang] || I18N.vi;
   const sleeping = isSleepingTime(now);
 
   if (sleeping) {
@@ -681,9 +823,9 @@ function updateUI(now = Date.now()) {
   const lastLog = state.logs[0];
   if (lastSmokeLabel) {
     if (lastLog) {
-      lastSmokeLabel.textContent = `Lần cuối: ${formatTimeHHMM(lastLog.timestamp)}`;
+      lastSmokeLabel.textContent = `${t.historyTitle}: ${formatTimeHHMM(lastLog.timestamp)}`;
     } else {
-      lastSmokeLabel.textContent = `Bắt đầu: ${formatTimeHHMM(state.streakStartMs)}`;
+      lastSmokeLabel.textContent = `${t.heroLabel}: ${formatTimeHHMM(state.streakStartMs)}`;
     }
   }
 
@@ -693,12 +835,12 @@ function updateUI(now = Date.now()) {
 
   monthlyAvgValue.textContent = formatShortDuration(metrics.monthlyAvgMs);
   if (monthlyAvgSub) {
-    monthlyAvgSub.textContent = `TB: ${metrics.dailyAvgCigs} điếu/ngày`;
+    monthlyAvgSub.textContent = t.dailyAvgSub(metrics.dailyAvgCigs);
   }
 
   todayCountValue.textContent = String(metrics.todayCigs);
   if (todayCountSub) {
-    todayCountSub.textContent = `${metrics.sumCigs30d} điếu từ ${metrics.startDateStr}`;
+    todayCountSub.textContent = t.todaySub(metrics.sumCigs30d, metrics.startDateStr);
   }
 
   if (metrics.pastRecordMs > 0 && currentAwakeMs > metrics.pastRecordMs) {
@@ -709,8 +851,8 @@ function updateUI(now = Date.now()) {
 
   modalCurrentStreak.textContent = formatShortDuration(currentAwakeMs);
   modalPastRecord.textContent = formatShortDuration(metrics.pastRecordMs);
-  modalMonthlyAvg.textContent = `${formatShortDuration(metrics.monthlyAvgMs)} (TB: ${metrics.dailyAvgCigs}/ngày)`;
-  modalTodayCount.textContent = `${metrics.todayCigs} điếu (${metrics.sumCigs30d} điếu từ ${metrics.startDateStr})`;
+  modalMonthlyAvg.textContent = `${formatShortDuration(metrics.monthlyAvgMs)} (${t.dailyAvgSub(metrics.dailyAvgCigs)})`;
+  modalTodayCount.textContent = `${metrics.todayCigs} ${metrics.todayCigs === 1 ? t.cigUnitSingle : t.cigsUnit} (${t.todaySub(metrics.sumCigs30d, metrics.startDateStr)})`;
 
   // Kiểm tra nổi popup sau mỗi 1 tiếng thức
   const awakeSinceCheckInMs = getAwakeDurationMs(state.lastCheckInMs, now);
@@ -742,9 +884,9 @@ document.querySelectorAll('[data-smoke]').forEach((btn) => {
 });
 
 btnUndo.addEventListener('click', handleUndo);
-btnTestPopup.addEventListener('click', () => {
-  openHourlyModal();
-});
+if (btnLangToggle) {
+  btnLangToggle.addEventListener('click', toggleLanguage);
+}
 
 btnUserModal.addEventListener('click', openUserModal);
 btnCloseUserModal.addEventListener('click', closeUserModal);
@@ -780,6 +922,7 @@ if (new URLSearchParams(window.location.search).get('prompt') === '1') {
 }
 
 // Khởi chạy
+applyLanguage();
 headerUserName.textContent = currentUser;
 renderLogs();
 updateUI(Date.now());
