@@ -47,8 +47,12 @@ jobs:
     - name: Prepare APK Output
       run: |
         mkdir -p release-output
-        cp android/app/build/outputs/apk/release/app-release.apk release-output/Smoff.apk
-        cp android/app/build/outputs/apk/release/app-release.apk ./Smoff.apk
+        APK_PATH=$(find android/app/build/outputs/apk -name "*release*.apk" | head -n 1)
+        if [ -z "$APK_PATH" ]; then
+          APK_PATH=$(find android/app/build/outputs/apk -name "*.apk" | head -n 1)
+        fi
+        echo "Found APK at: $APK_PATH"
+        cp "$APK_PATH" release-output/Smoff.apk
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
