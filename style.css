@@ -282,21 +282,66 @@ html, body {
   border-radius: 16px;
 }
 
-.cigar-emoji-group {
+/* Khối hiển thị điếu thuốc chồng tầng 3D nghiêng ~30 độ */
+.cigar-stack {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(1.2rem, 4.5vw, 1.45rem);
-  line-height: 1.2;
-  letter-spacing: -2px;
-  white-space: nowrap;
+  min-height: 38px;
   pointer-events: none;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
 }
 
-.btn-large .cigar-emoji-group {
-  font-size: clamp(1.35rem, 5vw, 1.65rem);
-  letter-spacing: -3px;
+.cigar-item {
+  display: inline-block;
+  font-size: clamp(1.35rem, 5vw, 1.6rem);
+  line-height: 1;
+  position: relative;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.btn-large .cigar-item {
+  font-size: clamp(1.5rem, 5.8vw, 1.8rem);
+}
+
+/* 1 điếu: nghiêng ~30 độ thanh thoát */
+.btn-smoke-1 .cigar-item {
+  transform: rotate(-6deg);
+}
+
+/* 2 điếu: gối chồng lên nhau, điếu trên đổ bóng lên điếu dưới */
+.btn-smoke-2 .cigar-stack .cigar-item:nth-child(1) {
+  transform: rotate(-10deg) translate(-2px, 2px);
+  z-index: 1;
+}
+.btn-smoke-2 .cigar-stack .cigar-item:nth-child(2) {
+  margin-left: -14px;
+  transform: rotate(-2deg) translate(2px, -3px);
+  z-index: 2;
+  filter: drop-shadow(-2px 3px 4px rgba(0, 0, 0, 0.7));
+}
+
+/* 3 điếu: 3 điếu chồng tầng lớp lên nhau so le 3D */
+.btn-smoke-3 .cigar-stack .cigar-item:nth-child(1) {
+  transform: rotate(-14deg) translate(-4px, 3px);
+  z-index: 1;
+}
+.btn-smoke-3 .cigar-stack .cigar-item:nth-child(2) {
+  margin-left: -16px;
+  transform: rotate(-5deg) translate(0px, -1px);
+  z-index: 2;
+  filter: drop-shadow(-2px 3px 4px rgba(0, 0, 0, 0.7));
+}
+.btn-smoke-3 .cigar-stack .cigar-item:nth-child(3) {
+  margin-left: -16px;
+  transform: rotate(4deg) translate(4px, -5px);
+  z-index: 3;
+  filter: drop-shadow(-2px 3px 4px rgba(0, 0, 0, 0.75));
+}
+
+.btn:active .cigar-stack {
+  transform: scale(1.04);
 }
 
 .btn-main-text {
